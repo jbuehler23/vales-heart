@@ -1,6 +1,12 @@
 [package]
-name = "vales-heart"
+name = "vales_heart"
 version = "0.1.0"
 edition = "2021"
+authors = ["Joseph Buehler <jbuehler23@gmail.com>"]
+description = "A cozy top-down RPG built with Bevy"
 
 [dependencies]
+bevy = "0.15.0"
+rand = "0.8.5"
+bevy_rapier2d = "0.15.0"  # Physics engine
+bevy_prototype_debug_lines = "0.15.0"  # For debug visualization
