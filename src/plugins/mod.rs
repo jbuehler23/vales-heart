@@ -1,4 +1,5 @@
 mod player;
+pub mod physics;
 // mod world;
 // mod combat;
 // mod inventory;

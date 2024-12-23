@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::{Collider, LockedAxes, RigidBody, Velocity};
 use crate::components::player::*;
 // use crate::components::stats::*;
 use crate::systems::{input::player_input, movement::player_movement};
-use crate::utils::constants::PLAYER_SPEED;
 
 pub struct PlayerPlugin;
 
@@ -14,7 +14,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands) {
+pub fn spawn_player(mut commands: Commands) {
     commands
         .spawn((
             Sprite {
@@ -23,11 +23,12 @@ fn spawn_player(mut commands: Commands) {
                 ..default()
             },
             Transform::from_xyz(0.0, 0.0, 1.0),
-        ))
-        .insert(Player {
-            speed: PLAYER_SPEED,
-            facing: Direction::Down,
-        })
-        .insert(MovementInput { x: 0.0, y: 0.0 });
-        // .insert(Stats::default());
+            Player { speed: 150.0, facing: Direction::Down },
+            MovementInput { x: 0.0, y: 0.0 },
+            // Add physics components
+            RigidBody::Dynamic,
+            Collider::cuboid(16.0, 16.0), // Half-extents for the 32x32 sprite
+            Velocity::zero(),
+            LockedAxes::ROTATION_LOCKED, // Prevent rotation
+        ));
 }

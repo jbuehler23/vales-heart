@@ -8,5 +8,5 @@ description = "A cozy top-down RPG built with Bevy"
 [dependencies]
 bevy = "0.15.0"
 rand = "0.8.5"
-bevy_rapier2d = "0.15.0"  # Physics engine
-bevy_prototype_debug_lines = "0.15.0"  # For debug visualization
+bevy_rapier2d = "0.28.0"  # Physics engine
+# bevy_prototype_debug_lines = "0.2.0"  # Debug lines

@@ -8,7 +8,7 @@ mod resources;
 mod systems;
 mod utils;
 
-use plugins::{PlayerPlugin};
+use plugins::PlayerPlugin;
 use resources::GameState;
 
 fn main() {
