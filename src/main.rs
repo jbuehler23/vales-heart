@@ -8,7 +8,7 @@ mod resources;
 mod systems;
 mod utils;
 
-use plugins::PlayerPlugin;
+use plugins::{combat::CombatPlugin, PlayerPlugin};
 use resources::GameState;
 
 fn main() {
@@ -27,7 +27,6 @@ fn main() {
                 ..default()
             }),)
         // Game plugins
-        .add_plugins(PlayerPlugin)
         // .add_plugin(WorldPlugin)
         // .add_plugin(CombatPlugin)
         // .add_plugin(InventoryPlugin)
@@ -35,6 +34,10 @@ fn main() {
         // Add game state
         .insert_state(GameState::Loading)
         .add_systems(Startup, setup)
+        .add_plugins((
+            PlayerPlugin,
+            CombatPlugin,
+        ))
         .run();
 }
 

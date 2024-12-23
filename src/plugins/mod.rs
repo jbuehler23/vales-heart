@@ -1,5 +1,6 @@
-mod player;
+pub mod player;
 pub mod physics;
+pub mod combat;
 // mod world;
 // mod combat;
 // mod inventory;

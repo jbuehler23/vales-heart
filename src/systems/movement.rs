@@ -1,17 +1,26 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::Velocity;
-use crate::components::player::{Player, MovementInput};
 
-// Update our movement system to work with physics
+use crate::components::player::{MovementInput, Player};
+
+// Add movement system
 pub fn player_movement(
     time: Res<Time>,
-    mut query: Query<(&Player, &MovementInput, &mut Velocity)>,
+    mut query: Query<(&Player, &MovementInput, &mut Transform)>,
 ) {
-    for (player, input, mut velocity) in query.iter_mut() {
-        let movement = Vec2::new(
-            input.x * player.speed,
-            input.y * player.speed,
-        );
-        velocity.linvel = movement;
+    for (player, movement, mut transform) in query.iter_mut() {
+        let movement_vector = Vec2::new(movement.x, movement.y);
+        
+        // Only move if there's input
+        if movement_vector != Vec2::ZERO {
+            // Normalize for consistent speed in all directions
+            let movement_vector = movement_vector.normalize();
+            
+            // Calculate frame-independent movement
+            let movement_delta = movement_vector * player.speed * time.delta_secs();
+            
+            // Update position
+            transform.translation.x += movement_delta.x;
+            transform.translation.y += movement_delta.y;
+        }
     }
 }
