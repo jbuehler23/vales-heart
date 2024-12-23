@@ -8,7 +8,8 @@ mod resources;
 mod systems;
 mod utils;
 
-use plugins::{combat::CombatPlugin, PlayerPlugin};
+use bevy_rapier2d::prelude::CollisionEvent;
+use plugins::{combat::CombatPlugin, physics::PhysicsPlugin, PlayerPlugin};
 use resources::GameState;
 
 fn main() {
@@ -34,8 +35,10 @@ fn main() {
         // Add game state
         .insert_state(GameState::Loading)
         .add_systems(Startup, setup)
+        .add_systems(Update, log_collision_events)
         .add_plugins((
             PlayerPlugin,
+            PhysicsPlugin,
             CombatPlugin,
         ))
         .run();
@@ -43,4 +46,19 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+fn log_collision_events(
+    mut collision_events: EventReader<CollisionEvent>,
+) {
+    for collision_event in collision_events.read() {
+        match collision_event {
+            CollisionEvent::Started(entity1, entity2, _) => {
+                info!("Collision started between entities: {:?} and {:?}", entity1, entity2);
+            }
+            CollisionEvent::Stopped(entity1, entity2, _) => {
+                info!("Collision stopped between entities: {:?} and {:?}", entity1, entity2);
+            }
+        }
+    }
 }

@@ -20,10 +20,18 @@ pub fn spawn_test_enemy(mut commands: Commands) {
             current: 100.0,
             maximum: 100.0,
         },
-        RigidBody::Dynamic,
+        RigidBody::Fixed,
         Collider::cuboid(16.0, 16.0),
+        LockedAxes::ROTATION_LOCKED,
+        GravityScale(0.0),
+        Velocity::zero(),
         ColliderDebugColor(Color::WHITE.into()),
         CombatDebug,
+        Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min,
+        },
+        ActiveEvents::COLLISION_EVENTS,
     ));
 }
 
@@ -42,25 +50,34 @@ pub fn handle_combat_collision(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
     player_query: Query<Entity, With<Player>>,
-    mut enemy_query: Query<(Entity, &Enemy, &mut Health)>,
+    mut enemy_query: Query<(Entity, &mut Health), With<Enemy>>,
 ) {
     for collision_event in collision_events.read() {
         match collision_event {
             CollisionEvent::Started(entity1, entity2, _) => {
-                // Check if one entity is the player and the other is an enemy
-                if let Some((player_entity, enemy_entity)) = get_player_enemy_pair(
-                    *entity1, 
-                    *entity2,
-                    &player_query,
-                    &enemy_query
-                ) {
-                    if let Ok((_, enemy, mut health)) = enemy_query.get_mut(enemy_entity) {
-                        info!("Combat collision between player and enemy!");
-                        health.current -= enemy.damage;
+                // Check if collision involves player and enemy
+                info!("Collision started between entities: {:?} and {:?}", entity1, entity2);
+                let is_player1 = player_query.contains(*entity1);
+                let is_player2 = player_query.contains(*entity2);
+                
+                // Get enemy entity
+                let enemy_entity = if is_player1 {
+                    Some(*entity2)
+                } else if is_player2 {
+                    Some(*entity1)
+                } else {
+                    None
+                };
 
+                // Process combat if enemy found
+                if let Some(enemy_ent) = enemy_entity {
+                    if let Ok((entity, mut health)) = enemy_query.get_mut(enemy_ent) {
+                        info!("Combat hit! Enemy health before: {}", health.current);
+                        health.current -= 10.0; // Example damage
+                        
                         if health.current <= 0.0 {
-                            info!("Enemy defeated!");
-                            commands.entity(enemy_entity).despawn();
+                            warn!("Enemy defeated!");
+                            commands.entity(entity).despawn();
                         }
                     }
                 }

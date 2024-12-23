@@ -1,6 +1,6 @@
-use crate::components::player::*;
+use crate::components::{combat::Enemy, player::*};
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::{Collider, LockedAxes, RigidBody, Velocity};
+use bevy_rapier2d::prelude::{ActiveEvents, CoefficientCombineRule, Collider, Friction, GravityScale, LockedAxes, RigidBody, Velocity};
 // use crate::components::stats::*;
 use crate::systems::{input::player_input, movement::player_movement};
 
@@ -32,5 +32,11 @@ pub fn spawn_player(mut commands: Commands) {
         Collider::cuboid(16.0, 16.0), // Half-extents for the 32x32 sprite
         Velocity::zero(),
         LockedAxes::ROTATION_LOCKED, // Prevent rotation
+        GravityScale(0.0), // Prevent gravity
+        Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Min,
+        },
+        ActiveEvents::COLLISION_EVENTS,
     ));
 }
