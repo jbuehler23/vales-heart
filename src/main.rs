@@ -9,7 +9,8 @@ mod systems;
 mod utils;
 
 use bevy_rapier2d::prelude::CollisionEvent;
-use plugins::{combat::CombatPlugin, physics::PhysicsPlugin, PlayerPlugin};
+use components::weapon::Weapon;
+use plugins::{combat::CombatPlugin, physics::PhysicsPlugin, weapon::WeaponPlugin, player::PlayerPlugin};
 use resources::GameState;
 
 fn main() {
@@ -40,6 +41,7 @@ fn main() {
             PlayerPlugin,
             PhysicsPlugin,
             CombatPlugin,
+            WeaponPlugin,
         ))
         .run();
 }
