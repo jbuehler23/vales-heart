@@ -1,65 +1,56 @@
-// use bevy::prelude::*;
-// use bevy::text::FontStyle;
-// use crate::components::class::*;
-// use crate::GameState;
+use bevy::prelude::*;
+use crate::{
+    components::{class::*, player::*, weapon::*},
+    resources::GameState,
+};
+use bevy_rapier2d::prelude::*;
 
-// pub fn class_selection_setup(mut commands: Commands) {
-//     // Setup UI for class selection
-//     commands
-//         .spawn(NodeBundle {
-//             style: Style {
-//                 width: Val::Percent(100.0),
-//                 height: Val::Percent(100.0),
-//                 flex_direction: FlexDirection::Column,
-//                 align_items: AlignItems::Center,
-//                 justify_content: JustifyContent::Center,
-//                 ..default()
-//             },
-//             ..default()
-//         })
-//         .with_children(|parent| {
-//             // Add class selection buttons
-//             for class_type in [ClassType::Warrior, ClassType::Archer, ClassType::Mage] {
-//                 parent.spawn((
-//                     ButtonBundle {
-//                         style: Style {
-//                             width: Val::Px(150.0),
-//                             height: Val::Px(50.0),
-//                             margin: UiRect::all(Val::Px(10.0)),
-//                             justify_content: JustifyContent::Center,
-//                             align_items: AlignItems::Center,
-//                             ..default()
-//                         },
-//                         background_color: Color::rgb(0.15, 0.15, 0.15).into(),
-//                         ..default()
-//                     },
-//                     class_type,
-//                 ));
-//             }
-//         });
-// }
+pub fn spawn_player_with_class(
+    mut commands: Commands,
+    class_type: ClassType,
+) {
+    let (player_class, weapon) = PlayerClass::new(class_type);
+    
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.25, 0.25, 0.75),
+                custom_size: Some(Vec2::new(32.0, 32.0)),
+                ..default()
+            },
+            transform: Transform::from_xyz(0.0, 0.0, 1.0),
+            ..default()
+        },
+        player_class.clone(),
+        weapon,
+        Player {
+            speed: player_class.base_stats.speed,
+            facing: Direction::Down,
+            character_stats: CharacterStats::default(),
+        },
+        MovementInput { x: 0.0, y: 0.0 },
+        RigidBody::Dynamic,
+        Collider::cuboid(16.0, 16.0),
+        LockedAxes::ROTATION_LOCKED,
+        GravityScale(0.0),
+        Velocity::zero(),
+        ActiveEvents::COLLISION_EVENTS,
+    ));
+}
 
-// pub fn handle_class_selection(
-//     mut commands: Commands,
-//     interaction_query: Query<(&Interaction, &ClassType), Changed<Interaction>>,
-//     mut next_state: ResMut<NextState<GameState>>,
-// ) {
-//     for (interaction, class_type) in interaction_query.iter() {
-//         if *interaction == Interaction::Pressed {
-//             let player_class = match class_type {
-//                 ClassType::Warrior => PlayerClass::warrior(),
-//                 ClassType::Archer => PlayerClass::archer(),
-//                 ClassType::Mage => PlayerClass::mage(),
-//             };
-            
-//             // Spawn player with selected class
-//             commands.spawn((
-//                 player_class,
-//                 // Add other player components...
-//             ));
-
-//             // Transition to gameplay state
-//             next_state.set(GameState::Playing);
-//         }
-//     }
-// }
+pub fn handle_class_selection(
+    mut commands: Commands,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if keyboard.just_pressed(KeyCode::Digit1) {
+        spawn_player_with_class(commands, ClassType::Warrior);
+        next_state.set(GameState::Playing);
+    } else if keyboard.just_pressed(KeyCode::Digit2) {
+        spawn_player_with_class(commands, ClassType::Archer);
+        next_state.set(GameState::Playing);
+    } else if keyboard.just_pressed(KeyCode::Digit3) {
+        spawn_player_with_class(commands, ClassType::Mage);
+        next_state.set(GameState::Playing);
+    }
+}

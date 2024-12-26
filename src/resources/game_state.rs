@@ -1,10 +1,10 @@
 use bevy::prelude::States;
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+#[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum GameState {
     #[default]
     Loading,
-    MainMenu,
-    InGame,
+    ClassSelection,
+    Playing,
     Paused,
 }

@@ -8,10 +8,12 @@ mod resources;
 mod systems;
 mod utils;
 
+use bevy_egui::EguiPlugin;
 use bevy_rapier2d::prelude::CollisionEvent;
 use components::weapon::Weapon;
 use plugins::{combat::CombatPlugin, physics::PhysicsPlugin, weapon::WeaponPlugin, player::PlayerPlugin};
 use resources::GameState;
+use systems::ui::class_selection_ui;
 
 fn main() {
     App::new()
@@ -34,7 +36,9 @@ fn main() {
         // .add_plugin(InventoryPlugin)
         // .add_plugin(DialoguePlugin)
         // Add game state
-        .insert_state(GameState::Loading)
+        .add_plugins(EguiPlugin)
+        .init_state::<GameState>()
+        .add_systems(OnEnter(GameState::ClassSelection), class_selection_ui)
         .add_systems(Startup, setup)
         .add_systems(Update, log_collision_events)
         .add_plugins((

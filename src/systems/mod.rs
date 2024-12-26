@@ -5,4 +5,5 @@ pub mod physics;
 pub mod combat;
 pub mod class;
 pub mod weapon;
+pub mod ui;
 // pub mod animation;

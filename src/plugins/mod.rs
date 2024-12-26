@@ -2,6 +2,7 @@ pub mod player;
 pub mod physics;
 pub mod combat;
 pub mod weapon;
+pub mod class;
 // mod world;
 // mod combat;
 // mod inventory;
