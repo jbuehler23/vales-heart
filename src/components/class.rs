@@ -7,7 +7,7 @@ pub struct PlayerClass {
     pub base_stats: ClassStats,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy)]
 pub enum ClassType {
     Warrior,
     Archer,

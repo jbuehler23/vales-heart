@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiContexts;
 use crate::{
     resources::GameState,
-    systems::ui::class_selection_ui,
+    systems::ui::{class_selection_ui, handle_class_selection},
 };
 
 pub struct ClassPlugin;
@@ -13,7 +13,8 @@ impl Plugin for ClassPlugin {
             // Initialize game and force ClassSelection state
             .add_systems(Startup, setup_initial_state)
             // Set up UI when entering ClassSelection
-            .add_systems(OnEnter(GameState::ClassSelection), class_selection_ui);
+            .add_systems(OnEnter(GameState::ClassSelection), class_selection_ui)
+            .add_systems(Update, handle_class_selection);
             // // Handle class selection while preventing other state changes
             // .add_systems(Update, (
             //     prevent_state_skip).run_if(in_state(GameState::ClassSelection)));

@@ -1,50 +1,99 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
-use crate::components::class::{ClassType, PlayerClass};
-use crate::resources::GameState;
-use crate::systems::class::spawn_player_with_class;
+use crate::{
+    components::class::ClassType,
+    resources::GameState,
+    systems::class::spawn_player_with_class,
+};
 
-pub fn class_selection_ui(
-    mut commands: Commands,
-    mut contexts: EguiContexts,
-    mut next_state: ResMut<NextState<GameState>>,
-) {
-    info!("Showing class selection UI");
-    egui::Window::new("Class Selection")
-        .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
-        .resizable(false)
-        .show(contexts.ctx_mut(), |ui| {
-            ui.heading("Choose Your Class");
-            ui.add_space(8.0);
+pub fn class_selection_ui(mut commands: Commands) {
+    // Root node
+    commands.spawn(Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        flex_direction: FlexDirection::Column,
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        ..default()
+    }).with_children(|parent| {
+            // Title
+            parent.spawn((
+                Text::new("Choose Your Class"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::WHITE)
+            ));
 
-            let button_size = egui::vec2(160.0, 40.0);
-
-            // Warrior
-            ui.horizontal(|ui| {
-                if ui.add_sized(button_size, egui::Button::new("Warrior")).clicked() {
-                    spawn_player_with_class(commands.reborrow(), ClassType::Warrior);
-                    next_state.set(GameState::Playing);
-                }
-                ui.label("Strong melee fighter with high health");
-            });
-
-
-            // Archer
-            ui.horizontal(|ui| {
-                if ui.add_sized(button_size, egui::Button::new("Archer")).clicked() {
-                    spawn_player_with_class(commands.reborrow(), ClassType::Archer);
-                    next_state.set(GameState::Playing);
-                }
-                ui.label("Skilled ranged fighter with high mobility");
-            });
-
-            // Mage
-            ui.horizontal(|ui| {
-                if ui.add_sized(button_size, egui::Button::new("Mage")).clicked() {
-                    spawn_player_with_class(commands.reborrow(), ClassType::Mage);
-                    next_state.set(GameState::Playing);
-                }
-                ui.label("Powerful spellcaster with high damage");
-            });
+            
         });
+
+            // Button container
+        //     parent
+        //         .spawn(NodeBundle {
+        //             style: Style {
+        //                 margin: UiRect::all(Val::Px(20.0)),
+        //                 flex_direction: FlexDirection::Column,
+        //                 align_items: AlignItems::Center,
+        //                 gap: Val::Px(10.0),
+        //                 ..default()
+        //             },
+        //             ..default()
+        //         })
+        //         .with_children(|parent| {
+        //             // Warrior Button
+        //             spawn_class_button(parent, "Warrior", ClassType::Warrior);
+        //             // Archer Button
+        //             spawn_class_button(parent, "Archer", ClassType::Archer);
+        //             // Mage Button
+        //             spawn_class_button(parent, "Mage", ClassType::Mage);
+        //         });
+        // });
+    
+}
+
+// fn spawn_class_button(parent: &mut ChildBuilder, text: &str, class_type: ClassType) {
+//     parent
+//         .spawn((
+//             ButtonBundle {
+//                 style: Style {
+//                     width: Val::Px(200.0),
+//                     height: Val::Px(50.0),
+//                     justify_content: JustifyContent::Center,
+//                     align_items: AlignItems::Center,
+//                     ..default()
+//                 },
+//                 background_color: Color::rgb(0.2, 0.2, 0.2).into(),
+//                 ..default()
+//             },
+//             class_type,
+//         ))
+//         .with_children(|parent| {
+//             parent.spawn(TextBundle::from_section(
+//                 text,
+//                 TextStyle {
+//                     font_size: 20.0,
+//                     color: Color::WHITE,
+//                     ..default()
+//                 },
+//             ));
+//         });
+// }
+
+pub fn handle_class_selection(
+    commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    interaction_query: Query<
+        (&Interaction, &ClassType),
+        (Changed<Interaction>, With<Button>),
+    >,
+) {
+    for (interaction, class_type) in interaction_query.iter() {
+        if *interaction == Interaction::Pressed {
+            info!("Selected {:?} class", class_type);
+            spawn_player_with_class(commands, *class_type);
+            next_state.set(GameState::Playing);
+            break;
+        }
     }
+}

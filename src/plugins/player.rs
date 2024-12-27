@@ -1,4 +1,4 @@
-use crate::{components::{combat::Enemy, player::*}, resources::GameState};
+use crate::components::{combat::Enemy, player::*};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::{ActiveEvents, CoefficientCombineRule, Collider, Friction, GravityScale, LockedAxes, RigidBody, Velocity};
 // use crate::components::stats::*;
@@ -9,8 +9,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player)
-            .add_systems(Update, (player_input, player_movement.after(player_input))
-            .run_if(in_state(GameState::Playing)));
+            .add_systems(Update, (player_input, player_movement.after(player_input)));
     }
 }
 
@@ -38,6 +37,6 @@ pub fn spawn_player(mut commands: Commands) {
             coefficient: 0.0,
             combine_rule: CoefficientCombineRule::Min,
         },
-        ActiveEvents::COLLISION_EVENTS,
+        ActiveEvents::COLLISION_EVENTS
     ));
 }
