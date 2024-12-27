@@ -11,9 +11,8 @@ mod utils;
 use bevy_egui::EguiPlugin;
 use bevy_rapier2d::prelude::CollisionEvent;
 use components::weapon::Weapon;
-use plugins::{combat::CombatPlugin, physics::PhysicsPlugin, weapon::WeaponPlugin, player::PlayerPlugin};
+use plugins::{class::ClassPlugin, combat::CombatPlugin, physics::PhysicsPlugin, player::PlayerPlugin, weapon::WeaponPlugin};
 use resources::GameState;
-use systems::ui::class_selection_ui;
 
 fn main() {
     App::new()
@@ -30,22 +29,18 @@ fn main() {
                 }),
                 ..default()
             }),)
-        // Game plugins
-        // .add_plugin(WorldPlugin)
-        // .add_plugin(CombatPlugin)
-        // .add_plugin(InventoryPlugin)
-        // .add_plugin(DialoguePlugin)
-        // Add game state
-        .add_plugins(EguiPlugin)
-        .init_state::<GameState>()
-        .add_systems(OnEnter(GameState::ClassSelection), class_selection_ui)
+        // Add camera and UI setup in Startup schedule
         .add_systems(Startup, setup)
-        .add_systems(Update, log_collision_events)
+        // UI plugin before state
+        .add_plugins(EguiPlugin)
+        // Initialize game state
+        .init_state::<GameState>()
+        // Game plugins
         .add_plugins((
+            ClassPlugin,
             PlayerPlugin,
             PhysicsPlugin,
             CombatPlugin,
-            WeaponPlugin,
         ))
         .run();
 }

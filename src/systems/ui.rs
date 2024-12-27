@@ -1,18 +1,15 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPlugin};
+use bevy_egui::{egui, EguiContexts};
 use crate::components::class::{ClassType, PlayerClass};
 use crate::resources::GameState;
 use crate::systems::class::spawn_player_with_class;
-
-pub fn setup_ui(app: &mut App) {
-    app.add_plugins(EguiPlugin);
-}
 
 pub fn class_selection_ui(
     mut commands: Commands,
     mut contexts: EguiContexts,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
+    info!("Showing class selection UI");
     egui::Window::new("Class Selection")
         .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
         .resizable(false)
