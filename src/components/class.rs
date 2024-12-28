@@ -78,3 +78,14 @@ impl PlayerClass {
         }
     }
 }
+
+#[derive(Resource)]
+pub struct SelectedClass {
+    pub class_type: Option<ClassType>,
+}
+
+impl Default for SelectedClass {
+    fn default() -> Self {
+        Self { class_type: None }
+    }
+}

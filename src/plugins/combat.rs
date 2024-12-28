@@ -1,14 +1,14 @@
-use crate::systems::combat::*;
+use crate::{resources::GameState, systems::{class::spawn_selected_player, combat::*}};
 use bevy::prelude::*;
 
 pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_test_enemy)
-            // .add_systems(Update, combat_debug)
-            .add_systems(Update, handle_combat_collision);
-
-        info!("Combat plugin initialized");
+        app
+            .add_systems(
+                OnEnter(GameState::Playing), 
+                spawn_test_enemy.after(spawn_selected_player)
+            );
     }
 }

@@ -5,6 +5,15 @@ use crate::{
 };
 use bevy_rapier2d::prelude::*;
 
+pub fn spawn_selected_player(
+    commands: Commands,
+    selected_class: Res<SelectedClass>,
+) {
+    if let Some(class_type) = selected_class.class_type {
+        spawn_player_with_class(commands, class_type);
+    }
+}
+
 pub fn spawn_player_with_class(
     mut commands: Commands,
     class_type: ClassType,

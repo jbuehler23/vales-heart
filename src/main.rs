@@ -31,14 +31,13 @@ fn main() {
             }),)
         // Add camera and UI setup in Startup schedule
         .add_systems(Startup, setup)
-        // UI plugin before state
-        .add_plugins(EguiPlugin)
         // Initialize game state
         .init_state::<GameState>()
         // Game plugins
         .add_plugins((
             ClassPlugin,
             PlayerPlugin,
+            WeaponPlugin,
             PhysicsPlugin,
             CombatPlugin,
         ))

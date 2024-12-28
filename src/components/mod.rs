@@ -5,3 +5,4 @@ pub mod inventory;
 pub mod quest;
 pub mod weapon;
 pub mod class;
+pub mod ui;
