@@ -8,7 +8,10 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), (player_movement.after(player_input)));
+        app.add_systems(Update, (
+            player_input,
+            player_movement
+        ).run_if(in_state(GameState::Playing)));
     }
 }
 

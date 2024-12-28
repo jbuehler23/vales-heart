@@ -6,9 +6,10 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(
-                OnEnter(GameState::Playing), 
-                spawn_test_enemy.after(spawn_selected_player)
+            .add_systems(OnEnter(GameState::Playing), spawn_test_enemy)
+            .add_systems(Update, 
+                handle_combat_collision
+                    .run_if(in_state(GameState::Playing))
             );
     }
 }
