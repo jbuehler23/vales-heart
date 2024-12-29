@@ -1,5 +1,5 @@
 use crate::{
-    components::{class::{ClassType, SelectedClass}, ui::MenuData}, resources::GameState, systems::class::spawn_player_with_class,
+    components::{class::{ClassType, SelectedClass}, ui::MenuData}, resources::GameState,
 };
 use bevy::prelude::*;
 

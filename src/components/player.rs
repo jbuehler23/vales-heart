@@ -7,6 +7,16 @@ pub struct Player {
     pub character_stats: CharacterStats,
 }
 
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            speed: 200.0,  // Increased base speed
+            facing: Direction::Down,
+            character_stats: CharacterStats::default(),
+        }
+    }
+}
+
 #[derive(Component, Debug)]
 pub struct CharacterStats {
     pub health: f32,

@@ -5,67 +5,67 @@ use crate::components::{
     class::{ClassType, PlayerClass}, combat::{Enemy, Health}, player::Player, weapon::{Projectile, Weapon, WeaponType}
 };
 
-pub fn spawn_weapon_for_player(
-    mut commands: Commands,
-    player_query: Query<(Entity, &PlayerClass), Added<Player>>,
-) {
-    for (player_entity, player_class) in player_query.iter() {
-        let weapon_config = match player_class.class_type {
-            ClassType::Warrior => (
-                WeaponType::Melee,
-                Color::from(Srgba::GREEN),
-                15.0,  // damage
-                32.0,  // range
-                1.0,   // attack speed
-                Vec2::new(16.0, 0.0), // offset
-            ),
-            ClassType::Archer => (
-                WeaponType::Ranged,
-                Color::from(Srgba::BLUE),
-                10.0,  // damage
-                150.0, // range
-                0.8,   // attack speed
-                Vec2::new(0.0, 8.0),  // offset
-            ),
-            ClassType::Mage => (
-                WeaponType::Ranged,
-                Color::from(Srgba::BLACK),
-                8.0,   // damage
-                100.0, // range
-                1.2,   // attack speed
-                Vec2::new(0.0, 8.0),  // offset
-            ),
-        };
+// pub fn spawn_weapon_for_player(
+//     mut commands: Commands,
+//     player_query: Query<(Entity, &PlayerClass), Added<Player>>,
+// ) {
+//     for (player_entity, player_class) in player_query.iter() {
+//         let weapon_config = match player_class.class_type {
+//             ClassType::Warrior => (
+//                 WeaponType::Melee,
+//                 Color::from(Srgba::GREEN),
+//                 15.0,  // damage
+//                 32.0,  // range
+//                 1.0,   // attack speed
+//                 Vec2::new(16.0, 0.0), // offset
+//             ),
+//             ClassType::Archer => (
+//                 WeaponType::Ranged,
+//                 Color::from(Srgba::BLUE),
+//                 10.0,  // damage
+//                 150.0, // range
+//                 0.8,   // attack speed
+//                 Vec2::new(0.0, 8.0),  // offset
+//             ),
+//             ClassType::Mage => (
+//                 WeaponType::Ranged,
+//                 Color::from(Srgba::BLACK),
+//                 8.0,   // damage
+//                 100.0, // range
+//                 1.2,   // attack speed
+//                 Vec2::new(0.0, 8.0),  // offset
+//             ),
+//         };
 
-        info!("Spawning {:?} weapon for player", player_class.class_type);
+//         info!("Spawning {:?} weapon for player", player_class.class_type);
         
-        commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    color: weapon_config.1,
-                    custom_size: Some(Vec2::new(16.0, 16.0)),
-                    ..default()
-                },
-                transform: Transform::from_xyz(
-                    weapon_config.5.x,
-                    weapon_config.5.y,
-                    0.0
-                ),
-                ..default()
-            },
-            Weapon {
-                weapon_type: weapon_config.0,
-                damage: weapon_config.2,
-                attack_range: weapon_config.3,
-                attack_speed: weapon_config.4,
-                last_attack: 0.0,
-            },
-            RigidBody::Fixed,
-            Collider::cuboid(8.0, 8.0),
-            ActiveEvents::COLLISION_EVENTS,
-        )).set_parent(player_entity);
-    }
-}
+//         commands.spawn((
+//             SpriteBundle {
+//                 sprite: Sprite {
+//                     color: weapon_config.1,
+//                     custom_size: Some(Vec2::new(16.0, 16.0)),
+//                     ..default()
+//                 },
+//                 transform: Transform::from_xyz(
+//                     weapon_config.5.x,
+//                     weapon_config.5.y,
+//                     0.0
+//                 ),
+//                 ..default()
+//             },
+//             Weapon {
+//                 weapon_type: weapon_config.0,
+//                 damage: weapon_config.2,
+//                 attack_range: weapon_config.3,
+//                 attack_speed: weapon_config.4,
+//                 last_attack: 0.0,
+//             },
+//             RigidBody::Fixed,
+//             Collider::cuboid(8.0, 8.0),
+//             ActiveEvents::COLLISION_EVENTS,
+//         )).set_parent(player_entity);
+//     }
+// }
 
 pub fn weapon_attack_system(
     mut commands: Commands,
