@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::components::player::MovementInput;
+use crate::{components::player::MovementInput, resources::GameState};
 
 pub fn player_input(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -31,6 +31,20 @@ pub fn player_input(
             let movement_vec = Vec2::new(movement.x, movement.y).normalize();
             movement.x = movement_vec.x;
             movement.y = movement_vec.y;
+        }
+    }
+}
+
+pub fn handle_escape_menu(
+    mut next_state: ResMut<NextState<GameState>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    current_state: Res<State<GameState>>,
+) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        match current_state.get() {
+            GameState::Playing => next_state.set(GameState::Paused),
+            GameState::Paused => next_state.set(GameState::Playing),
+            _ => {}
         }
     }
 }

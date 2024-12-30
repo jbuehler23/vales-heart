@@ -1,5 +1,5 @@
 use crate::{
-    components::{class::{ClassType, SelectedClass}, ui::MenuData}, resources::GameState,
+    components::{class::{ClassType, SelectedClass}, combat::Enemy, player::Player, ui::{ButtonType, MenuButton, MenuData}, weapon::Weapon}, resources::GameState,
 };
 use bevy::prelude::*;
 
@@ -96,3 +96,100 @@ pub fn cleanup_menu(
         commands.entity(root_entity).despawn_recursive();
     }
 }
+
+pub fn pause_menu_ui(
+    mut commands: Commands,
+    mut menu_data: ResMut<MenuData>,
+) {
+    info!("Showing pause menu");
+    // Root node
+    let root = commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        })
+        .with_children(|parent| {
+            // Title
+            parent.spawn((
+                Text::new("PAUSED"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::WHITE),
+            ));
+
+            parent
+                .spawn(Node {
+                    margin: UiRect::all(Val::Px(20.0)),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(10.0),
+                    ..default()
+                })
+                .with_children(|parent| {
+                    // Resume Button
+                    spawn_menu_button(parent, ButtonType::Resume);
+                    // Restart Button
+                    spawn_menu_button(parent, ButtonType::Restart);
+                });
+        })
+        .id();
+
+    menu_data.root_entity = Some(root);
+}
+
+fn spawn_menu_button(parent: &mut ChildBuilder, button_type: ButtonType) {
+    parent
+        .spawn((
+            Button,
+            MenuButton { button_type },
+            Node {
+                width: Val::Px(200.0),
+                height: Val::Px(50.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            BackgroundColor::from(Color::srgb(0.2, 0.2, 0.2)),
+        ))
+        .with_child((
+            Text::new(button_type.to_string()),
+            TextFont {
+                font_size: 20.0,
+                ..default()
+            },
+            TextColor(Color::WHITE),
+        ));
+}
+
+pub fn handle_pause_menu(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    interaction_query: Query<(&Interaction, &MenuButton), (Changed<Interaction>, With<Button>)>,
+    player_query: Query<Entity, With<Player>>,
+    enemy_query: Query<Entity, With<Enemy>>,
+    weapon_query: Query<Entity, With<Weapon>>,
+) {
+    for (interaction, button) in interaction_query.iter() {
+        if *interaction == Interaction::Pressed {
+            match button.button_type {
+                ButtonType::Resume => {
+                    next_state.set(GameState::Playing);
+                }
+                ButtonType::Restart => {
+                    // Clean up game entities
+                    for entity in player_query.iter().chain(enemy_query.iter()).chain(weapon_query.iter()) {
+                        commands.entity(entity).despawn_recursive();
+                    }
+                    next_state.set(GameState::ClassSelection);
+                }
+            }
+        }
+    }
+}
+
