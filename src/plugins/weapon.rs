@@ -9,7 +9,6 @@ impl Plugin for WeaponPlugin {
         app.add_systems(Update, (
             weapon_attack_system,
             projectile_system,
-            handle_weapon_collision,
             update_player_direction,
             update_melee_swing
         ).run_if(in_state(GameState::Playing)));

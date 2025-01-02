@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{components::player::MovementInput, resources::GameState};
+use crate::{components::player::{MovementInput, Player}, resources::GameState};
 
 pub fn player_input(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -45,6 +45,25 @@ pub fn handle_escape_menu(
             GameState::Playing => next_state.set(GameState::Paused),
             GameState::Paused => next_state.set(GameState::Playing),
             _ => {}
+        }
+    }
+}
+
+pub fn mouse_aim_system(
+    windows: Query<&Window>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
+    mut player_query: Query<&mut Transform, With<Player>>,
+) {
+    let (camera, camera_transform) = camera_q.single();
+    let window = windows.single();
+
+    if let Some(world_position) = window.cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
+        .map(|ray| ray.origin.truncate())
+    {
+        for mut transform in player_query.iter_mut() {
+            let direction = (world_position - transform.translation.truncate()).normalize();
+            transform.rotation = Quat::from_rotation_z(direction.y.atan2(direction.x));
         }
     }
 }

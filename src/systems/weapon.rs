@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css::{BROWN, ORANGE_RED, RED}, prelude::*};
 use bevy_rapier2d::prelude::*;
 use crate::components::{
-    class::{ClassType, PlayerClass}, combat::{Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Weapon, WeaponType}
+    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Weapon, WeaponType}
 };
 
 #[derive(Component)]
@@ -21,46 +21,60 @@ pub fn weapon_attack_system(
     mut commands: Commands,
     time: Res<Time>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    player_query: Query<(&Transform, &PlayerClass, &Player), With<Player>>,
+    windows: Query<&Window>,
+    camera_query: Query<(&Camera, &GlobalTransform)>,
+    player_query: Query<(&Transform, &PlayerClass), With<Player>>,
     mut weapon_query: Query<&mut Weapon>,
 ) {
     if !keyboard.just_pressed(KeyCode::Space) {
         return;
     }
 
-    for (player_transform, player_class, player) in player_query.iter() {
-        if let Ok(mut weapon) = weapon_query.get_single_mut() {
-            if time.elapsed_secs() - weapon.last_attack < weapon.attack_speed {
-                continue;
-            }
+    let (camera, camera_transform) = camera_query.single();
+    let window = windows.single();
 
-            weapon.last_attack = time.elapsed_secs();
-            let direction = get_facing_direction(player.facing);
-            let spawn_position = player_transform.translation + Vec3::new(direction.x * 32.0, direction.y * 32.0, 0.0);
+    if let Some(cursor_position) = window.cursor_position() {
+        if let Ok(world_position) = camera.viewport_to_world_2d(
+            camera_transform,
+            cursor_position,
+        ) {
+            for (player_transform, player_class) in player_query.iter() {
+                if let Ok(mut weapon) = weapon_query.get_single_mut() {
+                    if time.elapsed_secs() - weapon.last_attack < weapon.attack_speed {
+                        continue;
+                    }
 
-            match player_class.class_type {
-                ClassType::Warrior => {
-                    handle_melee_attack(&mut commands, spawn_position, direction, &weapon);
-                }
-                ClassType::Archer => {
-                    spawn_projectile(
-                        &mut commands,
-                        ProjectileType::Arrow,
-                        weapon.damage,
-                        spawn_position,
-                        direction,
-                        400.0,
-                    );
-                }
-                ClassType::Mage => {
-                    spawn_projectile(
-                        &mut commands,
-                        ProjectileType::Fireball,
-                        weapon.damage * 1.5,
-                        spawn_position,
-                        direction,
-                        300.0,
-                    );
+                    weapon.last_attack = time.elapsed_secs();
+
+                    // Calculate direction to mouse
+                    let direction = (world_position - player_transform.translation.truncate()).normalize();
+                    let spawn_position = player_transform.translation + Vec3::new(direction.x * 32.0, direction.y * 32.0, 0.0);
+
+                    match player_class.class_type {
+                        ClassType::Warrior => {
+                            handle_melee_attack(&mut commands, spawn_position, direction, &weapon);
+                        }
+                        ClassType::Archer => {
+                            spawn_projectile(
+                                &mut commands,
+                                ProjectileType::Arrow,
+                                weapon.damage,
+                                spawn_position,
+                                direction,
+                                400.0,
+                            );
+                        }
+                        ClassType::Mage => {
+                            spawn_projectile(
+                                &mut commands,
+                                ProjectileType::Fireball,
+                                weapon.damage * 1.5,
+                                spawn_position,
+                                direction,
+                                300.0,
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -155,15 +169,15 @@ fn spawn_projectile(
     speed: f32,
 ) {
     let (color, size) = match projectile_type {
-        ProjectileType::Arrow => (Color::from(Srgba::BLACK), Vec2::new(16.0, 4.0)),
-        ProjectileType::Fireball => (Color::from(Srgba::RED), Vec2::new(12.0, 12.0)),
+        ProjectileType::Arrow => (Color::from(BROWN), Vec2::new(16.0, 4.0)),
+        ProjectileType::Fireball => (Color::from(ORANGE_RED), Vec2::new(12.0, 12.0)),
     };
 
-    let rotation = if direction.x != 0.0 {
-        Quat::from_rotation_z(0.0)
-    } else {
-        Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)
-    };
+    // let rotation = if direction.x != 0.0 {
+    //     Quat::from_rotation_z(0.0)
+    // } else {
+    //     Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)
+    // };
 
     commands.spawn((
         SpriteBundle {
@@ -174,7 +188,7 @@ fn spawn_projectile(
             },
             transform: Transform {
                 translation: position,
-                rotation,
+                rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
                 ..default()
             },
             ..default()
@@ -226,42 +240,6 @@ pub fn projectile_system(
         projectile.lifetime.tick(time.delta());
         if projectile.lifetime.finished() {
             commands.entity(entity).despawn();
-        }
-    }
-}
-
-pub fn handle_weapon_collision(
-    mut commands: Commands,
-    mut collision_events: EventReader<CollisionEvent>,
-    projectiles: Query<(Entity, &Projectile, Option<&ProjectileType>)>,
-    mut enemies: Query<(Entity, &mut Health), With<Enemy>>,
-) {
-    for collision_event in collision_events.read() {
-        if let CollisionEvent::Started(entity1, entity2, _) = collision_event {
-            let (projectile_entity, enemy_entity) = if projectiles.contains(*entity1) && enemies.contains(*entity2) {
-                (*entity1, *entity2)
-            } else if projectiles.contains(*entity2) && enemies.contains(*entity1) {
-                (*entity2, *entity1)
-            } else {
-                continue;
-            };
-
-            if let Ok((_, projectile, projectile_type)) = projectiles.get(projectile_entity) {
-                if let Ok((_, mut health)) = enemies.get_mut(enemy_entity) {
-                    let damage = if let Some(ProjectileType::Fireball) = projectile_type {
-                        projectile.damage * 1.2
-                    } else {
-                        projectile.damage
-                    };
-
-                    health.current -= damage;
-                    commands.entity(projectile_entity).despawn();
-
-                    if health.current <= 0.0 {
-                        commands.entity(enemy_entity).despawn();
-                    }
-                }
-            }
         }
     }
 }

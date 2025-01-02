@@ -6,4 +6,5 @@ pub mod combat;
 pub mod class;
 pub mod weapon;
 pub mod ui;
+pub mod inventory;
 // pub mod animation;

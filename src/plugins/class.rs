@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContexts;
 use crate::{
     components::{class::SelectedClass, ui::MenuData}, resources::GameState, systems::{class::spawn_selected_player, ui::{class_selection_ui, cleanup_menu, handle_class_selection}}
 };
