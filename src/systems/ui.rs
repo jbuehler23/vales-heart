@@ -1,6 +1,6 @@
 use crate::{
     components::{
-        class::{ClassType, SelectedClass}, combat::Enemy, inventory::{Inventory, Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::Weapon
+        class::{ClassType, SelectedClass}, combat::Enemy, inventory::Inventory, item::{Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::Weapon
     },
     resources::GameState,
 };
@@ -223,30 +223,6 @@ pub fn handle_pause_menu(
                     }
                     next_state.set(GameState::ClassSelection);
                 }
-            }
-        }
-    }
-}
-
-pub fn update_inventory_slots(
-    mut commands: Commands,
-    inventory_query: Query<(&Inventory, &Children)>,
-    mut slot_query: Query<(&ItemSlot, &mut BackgroundColor)>,
-    item_query: Query<&Item>,
-) {
-    for (inventory, children) in inventory_query.iter() {
-        for (slot, mut bg_color) in slot_query.iter_mut() {
-            if let Some(Some(item_stack)) = inventory.slots.get(&slot.index) {
-                // Update slot appearance based on item rarity
-                bg_color.0 = match item_stack.item.rarity {
-                    ItemRarity::Common => Color::srgb(0.2, 0.2, 0.2),
-                    ItemRarity::Uncommon => Color::srgb(0.2, 0.4, 0.2),
-                    ItemRarity::Rare => Color::srgb(0.2, 0.2, 0.4),
-                    ItemRarity::Epic => Color::srgb(0.4, 0.2, 0.4),
-                    ItemRarity::Legendary => Color::srgb(0.4, 0.4, 0.2),
-                };
-            } else {
-                bg_color.0 = Color::srgba(0.1, 0.1, 0.1, 0.9);
             }
         }
     }

@@ -1,19 +1,27 @@
 use bevy::prelude::*;
-use crate::{components::{inventory::{Inventory, Item, ItemStack}, ui::InventoryState}, systems::{input::toggle_inventory, inventory::*, ui::{spawn_inventory_ui, update_inventory_slots}}};
+use crate::{components::{
+    armor::ArmorItem, consumable::ConsumableItem, inventory::*, item::{Item, ItemRarity, ItemType}, ui::InventoryState, weapon::WeaponItem
+}, systems::{input::toggle_inventory, inventory::{handle_item_pickup, handle_item_use, update_inventory_slots, update_inventory_ui}, ui::spawn_inventory_ui}};
 
 pub struct InventoryPlugin;
 
 impl Plugin for InventoryPlugin {
     fn build(&self, app: &mut App) {
         app
-            .register_type::<Inventory>()
-            .register_type::<ItemStack>()
             .register_type::<Item>()
+            .register_type::<ItemType>()
+            .register_type::<ItemRarity>()
+            .register_type::<WeaponItem>()
+            .register_type::<ArmorItem>() 
+            .register_type::<ConsumableItem>()
             .insert_resource(InventoryState::default())
             .add_systems(Startup, spawn_inventory_ui)
             .add_systems(Update, (
                 update_inventory_ui,
-            toggle_inventory,
-        update_inventory_slots));
+                toggle_inventory,
+                update_inventory_slots,
+                handle_item_pickup,
+                handle_item_use,
+            ));
     }
 }
