@@ -1,6 +1,6 @@
 use crate::{
     components::{
-        class::{ClassType, SelectedClass}, combat::Enemy, inventory::Inventory, item::{Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::Weapon
+        class::{ClassType, SelectedClass}, combat::Enemy, inventory::Inventory, item::{Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::WeaponItem
     },
     resources::GameState,
 };
@@ -204,7 +204,7 @@ pub fn handle_pause_menu(
     interaction_query: Query<(&Interaction, &MenuButton), (Changed<Interaction>, With<Button>)>,
     player_query: Query<Entity, With<Player>>,
     enemy_query: Query<Entity, With<Enemy>>,
-    weapon_query: Query<Entity, With<Weapon>>,
+    weapon_query: Query<Entity, With<WeaponItem>>,
 ) {
     for (interaction, button) in interaction_query.iter() {
         if *interaction == Interaction::Pressed {

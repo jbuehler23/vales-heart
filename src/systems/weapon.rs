@@ -1,7 +1,7 @@
 use bevy::{color::palettes::css::{BROWN, ORANGE_RED, RED}, prelude::*};
 use bevy_rapier2d::prelude::*;
 use crate::components::{
-    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Weapon, WeaponType}
+    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{WeaponItem, WeaponType}
 };
 
 #[derive(Component)]
@@ -24,7 +24,7 @@ pub fn weapon_attack_system(
     windows: Query<&Window>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     player_query: Query<(&Transform, &PlayerClass), With<Player>>,
-    mut weapon_query: Query<&mut Weapon>,
+    mut weapon_query: Query<&mut WeaponItem>,
 ) {
     if !keyboard.just_pressed(KeyCode::Space) {
         return;
@@ -85,7 +85,7 @@ fn handle_melee_attack(
     commands: &mut Commands,
     spawn_position: Vec3,
     direction: Vec2,
-    weapon: &Weapon,
+    weapon: &WeaponItem,
 ) {
     // Spawn swing arc entity
     let swing_time = 0.2; // Swing duration in seconds

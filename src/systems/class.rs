@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::{
-    components::{class::*, player::*, weapon::*},
+    components::{class::*, inventory::Equipment, player::*, weapon::*},
     resources::GameState,
 };
 
@@ -30,6 +30,7 @@ pub fn spawn_selected_player(
                 speed: 200.0,
                 facing: Direction::Down,
                 character_stats: CharacterStats::default(),
+                equipment: Equipment::default(),
             },
             MovementInput { x: 0.0, y: 0.0 },
             Collider::cuboid(16.0, 16.0),

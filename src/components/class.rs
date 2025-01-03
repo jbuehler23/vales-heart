@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use super::weapon::{Weapon, WeaponType};
+use super::weapon::{WeaponItem, WeaponType};
 
 #[derive(Component, Debug, Clone)]
 pub struct PlayerClass {
@@ -22,7 +22,7 @@ pub struct ClassStats {
 }
 
 impl PlayerClass {
-    pub fn new(class_type: ClassType) -> (Self, Weapon) {
+    pub fn new(class_type: ClassType) -> (Self, WeaponItem) {
         match class_type {
             ClassType::Warrior => (
                 Self {
@@ -33,7 +33,7 @@ impl PlayerClass {
                         damage_multiplier: 1.2,
                     },
                 },
-                Weapon {
+                WeaponItem {
                     weapon_type: WeaponType::Melee,
                     damage: 15.0,
                     attack_range: 32.0,
@@ -50,7 +50,7 @@ impl PlayerClass {
                         damage_multiplier: 1.0,
                     },
                 },
-                Weapon {
+                WeaponItem {
                     weapon_type: WeaponType::Ranged,
                     damage: 10.0,
                     attack_range: 150.0,
@@ -67,7 +67,7 @@ impl PlayerClass {
                         damage_multiplier: 1.5,
                     },
                 },
-                Weapon {
+                WeaponItem {
                     weapon_type: WeaponType::Ranged,
                     damage: 8.0,
                     attack_range: 100.0,

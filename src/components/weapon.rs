@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Reflect)]
-pub struct Weapon {
+pub struct WeaponItem {
     pub weapon_type: WeaponType,
     pub damage: f32,
     pub attack_range: f32,
@@ -35,12 +35,4 @@ pub struct Projectile {
 pub enum ProjectileType {
     Arrow,
     Fireball,
-}
-
-#[derive(Clone, Reflect)]
-pub struct WeaponItem {
-    pub damage: f32,
-    pub attack_speed: f32,
-    pub weapon_type: WeaponType,
-    pub requirements: HashMap<String, f32>,
 }

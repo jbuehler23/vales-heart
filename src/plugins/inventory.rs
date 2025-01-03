@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{components::{
-    armor::ArmorItem, consumable::ConsumableItem, inventory::*, item::{Item, ItemRarity, ItemType}, ui::InventoryState, weapon::WeaponItem
-}, systems::{input::toggle_inventory, inventory::{handle_item_pickup, handle_item_use, update_inventory_slots, update_inventory_ui}, ui::spawn_inventory_ui}};
+    armor::ArmorItem, consumable::ConsumableItem, inventory::*, item::{Item, ItemRarity, ItemType}, player::{CharacterStats, Effect}, ui::InventoryState, weapon::WeaponItem
+}, systems::{input::toggle_inventory, inventory::{handle_item_pickup, handle_item_use, update_equipment_stats, update_inventory_slots, update_inventory_ui}, ui::spawn_inventory_ui}};
 
 pub struct InventoryPlugin;
 
@@ -14,6 +14,9 @@ impl Plugin for InventoryPlugin {
             .register_type::<WeaponItem>()
             .register_type::<ArmorItem>() 
             .register_type::<ConsumableItem>()
+            .register_type::<Equipment>()
+            .register_type::<CharacterStats>()
+            .register_type::<Effect>()
             .insert_resource(InventoryState::default())
             .add_systems(Startup, spawn_inventory_ui)
             .add_systems(Update, (
@@ -22,6 +25,17 @@ impl Plugin for InventoryPlugin {
                 update_inventory_slots,
                 handle_item_pickup,
                 handle_item_use,
+                update_effects,
+                update_equipment_stats,
             ));
+    }
+}
+
+fn update_effects(mut query: Query<&mut CharacterStats>, time: Res<Time>) {
+    for mut stats in query.iter_mut() {
+        stats.active_effects.retain(|_, effect| {
+            effect.duration -= time.delta_secs();
+            effect.duration > 0.0
+        });
     }
 }

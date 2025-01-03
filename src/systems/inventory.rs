@@ -1,5 +1,5 @@
+use crate::components::{armor::ArmorSlot, consumable::EffectType, inventory::*, item::ItemRarity, player::{CharacterStats, Effect}};
 use bevy::prelude::*;
-use crate::components::{consumable::EffectType, inventory::*, item::ItemRarity};
 
 pub fn add_item_to_inventory(
     inventory: &mut Inventory,
@@ -36,13 +36,13 @@ pub fn update_inventory_ui(
     }
 }
 
-use bevy::prelude::*;
 use crate::components::{
     inventory::*,
     item::{Item, ItemType},
-    ui::InventoryUI,
     player::Player,
+    ui::InventoryUI,
 };
+use bevy::prelude::*;
 
 // Handle picking up items in the world
 pub fn handle_item_pickup(
@@ -59,50 +59,37 @@ pub fn handle_item_pickup(
 
             match add_item_to_inventory(&mut inventory, item_stack) {
                 Ok(_) => {
-                    // Remove item from world
+                    // Successfully added item to inventory, remove from world
                     commands.entity(item_entity).despawn();
                 }
-                Err(_) => {
-                    // Inventory full - leave item in world
+                Err(e) => {
+                    info!("Could not pick up item: {}", e);
+                    // Leave item in world
                 }
             }
         }
     }
 }
 
-// Handle using items from inventory
+// Handle using/equipping items
 pub fn handle_item_use(
     mut commands: Commands,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&mut Inventory, &mut Player)>,
 ) {
     if let Ok((mut inventory, mut player)) = player_query.get_single_mut() {
-        // Example: Use item in first slot with Q key
+        // Use item in first slot with 1 key
         if keyboard.just_pressed(KeyCode::KeyQ) {
             if let Ok(item_stack) = remove_item_from_inventory(&mut inventory, 0) {
                 match item_stack.item.item_type {
                     ItemType::Consumable(consumable) => {
-                        // Apply consumable effects
-                        match consumable.effect_type {
-                            EffectType::Health => {
-                                // Heal player
-                            }
-                            EffectType::Mana => {
-                                // Restore mana
-                            }
-                            EffectType::Stamina => {
-                                // Restore stamina  
-                            }
-                            EffectType::StatBuff(_) => {
-                                // Apply buff
-                            }
-                        }
+                        apply_consumable_effect(&mut player, consumable);
                     }
                     ItemType::Weapon(weapon) => {
-                        // Equip weapon
+                        equip_weapon(&mut player, weapon);
                     }
                     ItemType::Armor(armor) => {
-                        // Equip armor
+                        equip_armor(&mut player, armor);
                     }
                 }
             }
@@ -110,30 +97,109 @@ pub fn handle_item_use(
     }
 }
 
-// Update inventory slot UI
+fn equip_armor(player: &mut Player, armor: crate::components::armor::ArmorItem) {
+    match armor.slot {
+        ArmorSlot::Head => player.equipment.head = Some(armor),
+        ArmorSlot::Chest => player.equipment.chest = Some(armor),
+        ArmorSlot::Legs => player.equipment.legs = Some(armor),
+        ArmorSlot::Feet => player.equipment.feet = Some(armor),
+    }
+}
+
+fn equip_weapon(player: &mut Player, weapon: crate::components::weapon::WeaponItem) {
+    player.equipment.weapon = Some(weapon);
+}
+
+fn apply_consumable_effect(player: &mut Player, consumable: crate::components::consumable::ConsumableItem) {
+    let effect_type = consumable.effect_type;
+    match effect_type {
+        EffectType::Health => {
+            let current_health = player.character_stats.health;
+            player.character_stats.health = (current_health + consumable.potency).min(player.character_stats.max_health);
+        }
+        EffectType::Mana => {
+            let current_mana = player.character_stats.mana;
+            player.character_stats.mana = (current_mana + consumable.potency).min(player.character_stats.max_mana);
+        }
+        EffectType::StatBuff(buff_type) => {
+            player.character_stats.active_effects.insert(
+                buff_type.to_string(),
+                Effect {
+                    duration: consumable.duration.unwrap_or(0.0),
+                    potency: consumable.potency,
+                    effect_type: effect_type,
+                }
+            );
+        }
+        EffectType::Stamina => {
+            let current_stamina = player.character_stats.stamina;
+            player.character_stats.stamina = (current_stamina + consumable.potency).min(player.character_stats.max_stamina);
+        }
+    }
+}
+
+// Update UI to show inventory contents
 pub fn update_inventory_slots(
     inventory_query: Query<(&Inventory, &Children)>,
     mut slot_query: Query<(Entity, &mut BackgroundColor, &mut Text), With<InventoryUI>>,
 ) {
-    for (inventory, _) in inventory_query.iter() {
+    for (inventory, _children) in inventory_query.iter() {
+        // Create a map of slot indices to slot entities
+        let slot_entities: Vec<_> = slot_query.iter().map(|(e, _, _)| e).collect();
         for (slot_index, item_stack) in inventory.slots.iter() {
-            for (entity, mut bg_color, mut text) in slot_query.iter_mut() {
-                if let Some(item_stack) = item_stack {
-                    // Update slot appearance based on item
-                    bg_color.0 = match item_stack.item.rarity {
-                        ItemRarity::Common => Color::srgb(0.5, 0.5, 0.5),
-                        ItemRarity::Uncommon => Color::srgb(0.2, 0.8, 0.2),
-                        ItemRarity::Rare => Color::srgb(0.2, 0.2, 0.8),
-                        ItemRarity::Epic => Color::srgb(0.8, 0.2, 0.8),
-                        ItemRarity::Legendary => Color::srgb(0.8, 0.8, 0.2),
-                    };
-                    text.0 = item_stack.item.name.clone();
-                } else {
-                    // Empty slot
-                    bg_color.0 = Color::srgba(0.2, 0.2, 0.2, 0.5);
-                    text.0 = String::new();
+            if *slot_index < slot_entities.len() {
+                if let Ok((_, mut bg_color, mut text)) =
+                    slot_query.get_mut(slot_entities[*slot_index])
+                {
+                    if let Some(item_stack) = item_stack {
+                        // Update slot appearance based on item
+                        *bg_color = get_rarity_color(&item_stack.item.rarity).into();
+                        text.0 = format!("{} ({})", item_stack.item.name, item_stack.quantity);
+                    } else {
+                        // Empty slot
+                        *bg_color = Color::srgba(0.2, 0.2, 0.2, 0.5).into();
+                        text.0 = String::new();
+                    }
                 }
             }
+        }
+    }
+
+    // Helper functions
+    fn get_rarity_color(rarity: &ItemRarity) -> Color {
+        match rarity {
+            ItemRarity::Common => Color::srgb(0.5, 0.5, 0.5),
+            ItemRarity::Uncommon => Color::srgb(0.2, 0.8, 0.2),
+            ItemRarity::Rare => Color::srgb(0.2, 0.2, 0.8),
+            ItemRarity::Epic => Color::srgb(0.8, 0.2, 0.8),
+            ItemRarity::Legendary => Color::srgb(0.8, 0.8, 0.2),
+        }
+    }
+}
+
+/// Update player stats based on equipped items
+pub fn update_equipment_stats(mut query: Query<(&Equipment, &mut CharacterStats)>) {
+    for (equipment, mut stats) in query.iter_mut() {
+        // Reset to base stats first
+        stats.reset_to_base();
+        
+        // Apply weapon bonuses if equipped
+        if let Some(weapon) = &equipment.weapon {
+            stats.apply_weapon_bonus(weapon);
+        }
+
+        // Apply armor bonuses from each slot
+        if let Some(head) = &equipment.head {
+            stats.apply_armor_bonus(head);
+        }
+        if let Some(chest) = &equipment.chest {
+            stats.apply_armor_bonus(chest);
+        }
+        if let Some(legs) = &equipment.legs {
+            stats.apply_armor_bonus(legs);
+        }
+        if let Some(feet) = &equipment.feet {
+            stats.apply_armor_bonus(feet);
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::{components::{combat::Enemy, player::*}, resources::GameState};
+use crate::{components::{combat::Enemy, inventory::Equipment, player::*}, resources::GameState};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::{ActiveEvents, CoefficientCombineRule, Collider, Friction, GravityScale, LockedAxes, RigidBody, Velocity};
 // use crate::components::stats::*;
@@ -27,6 +27,7 @@ pub fn spawn_player(mut commands: Commands) {
             speed: 150.0,
             facing: Direction::Down,
             character_stats: CharacterStats::default(),
+            equipment: Equipment::default(),
         },
         MovementInput { x: 0.0, y: 0.0 },
         // Add physics components

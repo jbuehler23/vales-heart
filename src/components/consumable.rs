@@ -7,7 +7,7 @@ pub struct Consumable {
     pub duration: Option<f32>,
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Copy, Clone, Reflect)]
 pub enum EffectType {
     Health,
     Mana,
@@ -15,11 +15,20 @@ pub enum EffectType {
     StatBuff(StatType),
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Clone, Reflect, Copy)]
 pub enum StatType {
     Damage,
     Defense,
     Speed,
+}
+impl StatType {
+    pub(crate) fn to_string(&self) -> String {
+        match self {
+            StatType::Damage => "Damage".to_string(),
+            StatType::Defense => "Defense".to_string(),
+            StatType::Speed => "Speed".to_string(),
+        }
+    }
 }
 
 #[derive(Clone, Reflect)]
