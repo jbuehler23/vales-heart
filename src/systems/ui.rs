@@ -1,7 +1,10 @@
 use crate::{
-    components::{class::{ClassType, SelectedClass}, combat::Enemy, player::Player, ui::{ButtonType, MenuButton, MenuData}, weapon::Weapon}, resources::GameState,
+    components::{
+        class::{ClassType, SelectedClass}, combat::Enemy, inventory::{Inventory, Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::Weapon
+    },
+    resources::GameState,
 };
-use bevy::prelude::*;
+use bevy::{prelude::*, text::cosmic_text::ttf_parser::RgbaColor};
 
 pub fn class_selection_ui(mut commands: Commands, mut menu_data: ResMut<MenuData>) {
     // Root node
@@ -88,19 +91,47 @@ pub fn handle_class_selection(
     }
 }
 
-pub fn cleanup_menu(
-    mut commands: Commands,
-    menu_data: Res<MenuData>,
-) {
+pub fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
     if let Some(root_entity) = menu_data.root_entity {
         commands.entity(root_entity).despawn_recursive();
     }
 }
 
-pub fn pause_menu_ui(
-    mut commands: Commands,
-    mut menu_data: ResMut<MenuData>,
-) {
+pub fn spawn_inventory_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(
+        (Node {
+            position_type: PositionType::Absolute,
+            right: Val::Px(10.0),
+            top: Val::Px(10.0),
+            width: Val::Px(400.0),
+            height: Val::Px(300.0),
+            display: Display::Grid,
+            grid_template_columns: RepeatedGridTrack::flex(5, 1.0),
+            padding: UiRect::all(Val::Px(10.0)),
+            
+            ..default()
+        },
+        BackgroundColor::from(Color::srgba(0.2, 0.2, 0.2, 0.8)),
+        Visibility::Hidden,
+        InventoryUI,
+    )).with_children(|parent| {
+        for i in 0..20 {
+            parent.spawn((
+                Button,
+                Node {
+                    width: Val::Px(70.0),
+                    height: Val::Px(70.0),
+                    margin: UiRect::all(Val::Px(5.0)),
+                    ..default()
+                },
+                BackgroundColor::from(Color::srgba(0.1, 0.1, 0.1, 0.9)),
+                ItemSlot { index: i },
+            ));
+        }
+    });
+}
+
+pub fn pause_menu_ui(mut commands: Commands, mut menu_data: ResMut<MenuData>) {
     info!("Showing pause menu");
     // Root node
     let root = commands
@@ -183,7 +214,11 @@ pub fn handle_pause_menu(
                 }
                 ButtonType::Restart => {
                     // Clean up game entities
-                    for entity in player_query.iter().chain(enemy_query.iter()).chain(weapon_query.iter()) {
+                    for entity in player_query
+                        .iter()
+                        .chain(enemy_query.iter())
+                        .chain(weapon_query.iter())
+                    {
                         commands.entity(entity).despawn_recursive();
                     }
                     next_state.set(GameState::ClassSelection);
@@ -193,3 +228,26 @@ pub fn handle_pause_menu(
     }
 }
 
+pub fn update_inventory_slots(
+    mut commands: Commands,
+    inventory_query: Query<(&Inventory, &Children)>,
+    mut slot_query: Query<(&ItemSlot, &mut BackgroundColor)>,
+    item_query: Query<&Item>,
+) {
+    for (inventory, children) in inventory_query.iter() {
+        for (slot, mut bg_color) in slot_query.iter_mut() {
+            if let Some(Some(item_stack)) = inventory.slots.get(&slot.index) {
+                // Update slot appearance based on item rarity
+                bg_color.0 = match item_stack.item.rarity {
+                    ItemRarity::Common => Color::srgb(0.2, 0.2, 0.2),
+                    ItemRarity::Uncommon => Color::srgb(0.2, 0.4, 0.2),
+                    ItemRarity::Rare => Color::srgb(0.2, 0.2, 0.4),
+                    ItemRarity::Epic => Color::srgb(0.4, 0.2, 0.4),
+                    ItemRarity::Legendary => Color::srgb(0.4, 0.4, 0.2),
+                };
+            } else {
+                bg_color.0 = Color::srgba(0.1, 0.1, 0.1, 0.9);
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Entity, Resource};
+use bevy::{prelude::{Component, Entity, Resource}, reflect::Reflect};
 
 #[derive(Default, Resource)]
 pub struct MenuData {
@@ -34,4 +34,23 @@ impl ToString for ButtonType {
             ButtonType::Restart => "Restart".to_string(),
         }
     }
+}
+
+#[derive(Component)]
+pub struct InventoryUI;
+
+#[derive(Component)]
+pub struct ItemSlot {
+    pub index: usize,
+}
+
+#[derive(Component)]
+pub struct DraggingItem {
+    pub original_slot: usize,
+    pub item_entity: Entity,
+}
+
+#[derive(Resource, Default)]
+pub struct InventoryState {
+    pub is_open: bool,
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{components::player::{MovementInput, Player}, resources::GameState};
+use crate::{components::{player::{MovementInput, Player}, ui::{InventoryState, InventoryUI}}, resources::GameState};
 
 pub fn player_input(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -64,6 +64,23 @@ pub fn mouse_aim_system(
         for mut transform in player_query.iter_mut() {
             let direction = (world_position - transform.translation.truncate()).normalize();
             transform.rotation = Quat::from_rotation_z(direction.y.atan2(direction.x));
+        }
+    }
+}
+
+pub fn toggle_inventory(
+    mut inventory_state: ResMut<InventoryState>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut inventory_query: Query<&mut Visibility, With<InventoryUI>>,
+) {
+    if keyboard.just_pressed(KeyCode::Tab) {
+        inventory_state.is_open = !inventory_state.is_open;
+        if let Ok(mut visibility) = inventory_query.get_single_mut() {
+            *visibility = if inventory_state.is_open {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            };
         }
     }
 }
