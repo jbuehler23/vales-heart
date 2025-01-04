@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy::reflect::Reflect;
 
-#[derive(Clone, Reflect)]
+#[derive(Clone, Reflect, Debug)]
 pub enum ArmorSlot {
     Head,
     Chest,
@@ -19,7 +19,7 @@ pub struct ArmorItem {
 }
 
 
-#[derive(Clone, Reflect)]
+#[derive(Clone, Reflect, Debug)]
 pub enum ArmorType {
     Light,
     Medium,

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{components::{
     armor::ArmorItem, consumable::ConsumableItem, inventory::*, item::{Item, ItemRarity, ItemType}, player::{CharacterStats, Effect}, ui::InventoryState, weapon::WeaponItem
-}, systems::{input::toggle_inventory, inventory::{handle_item_pickup, handle_item_use, update_equipment_stats, update_inventory_slots, update_inventory_ui}, ui::spawn_inventory_ui}};
+}, systems::{input::toggle_inventory, inventory::{handle_item_pickup, handle_item_use, update_equipment_stats, update_inventory_slots, update_inventory_ui}, ui::spawn_inventory_ui, world::update_item_hover_text}};
 
 pub struct InventoryPlugin;
 
@@ -27,6 +27,7 @@ impl Plugin for InventoryPlugin {
                 handle_item_use,
                 update_effects,
                 update_equipment_stats,
+                update_item_hover_text,
             ));
     }
 }

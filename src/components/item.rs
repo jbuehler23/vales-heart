@@ -20,7 +20,7 @@ pub enum ItemType {
     Consumable(ConsumableItem),
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Clone, Reflect, Debug)]
 pub enum ItemRarity {
     Common,
     Uncommon,
