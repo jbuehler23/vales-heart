@@ -1,4 +1,4 @@
-use crate::components::{combat::*, player::Player, weapon::ProjectileType};
+use crate::{components::{combat::*, player::Player, weapon::ProjectileType}, utils::drops::drop_item};
 use bevy::{
     color::palettes::css::{RED, WHITE},
     prelude::*,
@@ -48,50 +48,6 @@ pub fn combat_debug(query: Query<(&Transform, &Health), With<CombatDebug>>) {
             "Enemy at {:?} - Health: {}/{}",
             transform.translation, health.current, health.maximum
         );
-    }
-}
-
-pub fn handle_combat_collision(
-    mut commands: Commands,
-    mut collision_events: EventReader<CollisionEvent>,
-    player_query: Query<Entity, With<Player>>,
-    mut enemy_query: Query<(Entity, &mut Health), With<Enemy>>,
-) {
-    for collision_event in collision_events.read() {
-        match collision_event {
-            CollisionEvent::Started(entity1, entity2, _) => {
-                // Check if collision involves player and enemy
-                info!(
-                    "Collision started between entities: {:?} and {:?}",
-                    entity1, entity2
-                );
-                let is_player1 = player_query.contains(*entity1);
-                let is_player2 = player_query.contains(*entity2);
-
-                // Get enemy entity
-                let enemy_entity = if is_player1 {
-                    Some(*entity2)
-                } else if is_player2 {
-                    Some(*entity1)
-                } else {
-                    None
-                };
-
-                // Process combat if enemy found
-                if let Some(enemy_ent) = enemy_entity {
-                    if let Ok((entity, mut health)) = enemy_query.get_mut(enemy_ent) {
-                        info!("Combat hit! Enemy health before: {}", health.current);
-                        health.current -= 10.0; // Example damage
-
-                        if health.current <= 0.0 {
-                            warn!("Enemy defeated!");
-                            commands.entity(entity).despawn();
-                        }
-                    }
-                }
-            }
-            CollisionEvent::Stopped(_, _, _) => {}
-        }
     }
 }
 
@@ -258,6 +214,7 @@ pub fn handle_weapon_collision(
 
                     if health.current <= 0.0 {
                         commands.entity(enemy_entity).despawn();
+                        drop_item(0.5, transform, &mut commands);
                     }
                 }
             }
