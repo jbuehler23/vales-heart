@@ -9,8 +9,8 @@ impl Plugin for CombatPlugin {
             .add_systems(OnEnter(GameState::Playing), spawn_test_enemy)
             .add_systems(Update, (
                 mouse_aim_system,
+                handle_combat_collisions,
                 update_floating_text,
-                handle_weapon_collision,
             ).run_if(in_state(GameState::Playing)));
     }
 }

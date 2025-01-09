@@ -7,7 +7,7 @@ pub struct Consumable {
     pub duration: Option<f32>,
 }
 
-#[derive(Copy, Clone, Reflect)]
+#[derive(Debug, Copy, Clone, Reflect)]
 pub enum EffectType {
     Health,
     Mana,
@@ -15,7 +15,7 @@ pub enum EffectType {
     StatBuff(StatType),
 }
 
-#[derive(Clone, Reflect, Copy)]
+#[derive(Debug, Clone, Reflect, Copy)]
 pub enum StatType {
     Damage,
     Defense,
@@ -31,7 +31,7 @@ impl StatType {
     }
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 pub struct ConsumableItem {
     pub effect_type: EffectType,
     pub potency: f32,

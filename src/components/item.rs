@@ -13,7 +13,7 @@ pub struct Item {
     pub value: u32,
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 pub enum ItemType {
     Weapon(WeaponItem),
     Armor(ArmorItem),

@@ -10,7 +10,7 @@ pub enum ArmorSlot {
     Feet,
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Debug, Clone, Reflect)]
 pub struct ArmorItem {
     pub defense: f32,
     pub armor_type: ArmorType,

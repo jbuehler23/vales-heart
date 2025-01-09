@@ -2,7 +2,7 @@ use bevy::{color::palettes::css::{BLUE, GOLD, GREEN, MEDIUM_PURPLE}, prelude::*}
 use rand::Rng;
 use crate::components::{
     item::{Item, ItemType, ItemRarity},
-    weapon::{WeaponItem, WeaponType},
+    weapon::{WeaponItem, WeaponType, WeaponProperties, MeleeProperties, RangedProperties},
     armor::{ArmorItem, ArmorType, ArmorSlot},
     consumable::{ConsumableItem, EffectType},
 };
@@ -31,13 +31,31 @@ pub fn spawn_random_item(
     });
 
     let item_type = match rng.gen_range(0..3) {
-        0 => ItemType::Weapon(WeaponItem {
-            weapon_type: if rng.gen_bool(0.5) { WeaponType::Melee } else { WeaponType::Ranged },
-            damage: rng.gen_range(5.0..15.0) * get_rarity_multiplier(&rarity),
-            attack_range: rng.gen_range(32.0..64.0),
-            attack_speed: rng.gen_range(0.8..2.0),
-            last_attack: 0.0,
-        }),
+        0 => {
+            let is_melee = rng.gen_bool(0.5);
+            let damage = rng.gen_range(5.0..15.0) * get_rarity_multiplier(&rarity);
+            
+            ItemType::Weapon(WeaponItem {
+                weapon_type: if is_melee { WeaponType::Melee } else { WeaponType::Ranged },
+                damage,
+                attack_speed: rng.gen_range(0.8..2.0),
+                last_attack: 0.0,
+                properties: if is_melee {
+                    WeaponProperties::Melee(MeleeProperties {
+                        swing_width: rng.gen_range(32.0..64.0),
+                        swing_height: rng.gen_range(16.0..32.0),
+                        swing_time: rng.gen_range(0.1..0.3),
+                        swing_arc: rng.gen_range(std::f32::consts::PI * 0.5..std::f32::consts::PI),
+                    })
+                } else {
+                    WeaponProperties::Ranged(RangedProperties {
+                        projectile_speed: rng.gen_range(200.0..400.0),
+                        projectile_size: rng.gen_range(4.0..12.0),
+                        max_range: rng.gen_range(300.0..500.0),
+                    })
+                },
+            })
+        },
         1 => ItemType::Armor(ArmorItem {
             armor_type: match rng.gen_range(0..3) {
                 0 => ArmorType::Light,
@@ -161,7 +179,13 @@ fn generate_item_name(item_type: &ItemType, rarity: &ItemRarity) -> String {
 
 fn generate_item_description(item_type: &ItemType) -> String {
     match item_type {
-        ItemType::Weapon(w) => format!("Damage: {:.1}, Range: {:.1}, Speed: {:.1}", w.damage, w.attack_range, w.attack_speed),
+        ItemType::Weapon(w) => {
+            let base_desc = format!("Damage: {:.1}, Speed: {:.1}", w.damage, w.attack_speed);
+            match &w.properties {
+                WeaponProperties::Melee(m) => format!("{} (Melee, Width: {:.1})", base_desc, m.swing_width),
+                WeaponProperties::Ranged(r) => format!("{} (Ranged, Range: {:.1})", base_desc, r.max_range),
+            }
+        },
         ItemType::Armor(a) => format!("Defense: {:.1}", a.defense),
         ItemType::Consumable(c) => format!("Heals for {:.1} health", c.potency),
     }
