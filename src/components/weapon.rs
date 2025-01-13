@@ -44,6 +44,7 @@ pub struct Attack {
     pub timer: Timer,
     pub damage: f32,
     pub range: f32,
+    owner: Entity,
 }
 
 #[derive(Component)]
@@ -51,6 +52,7 @@ pub struct Projectile {
     pub damage: f32,
     pub speed: f32,
     pub lifetime: Timer,
+    pub owner: Entity,
 }
 
 #[derive(Component)]
@@ -139,7 +141,7 @@ impl WeaponItem {
         }
     }
 
-    pub fn spawn_attack(&self, commands: &mut Commands, transform: &Transform) {
+    pub fn spawn_attack(&self, commands: &mut Commands, owner: Entity, transform: &Transform) {
         match &self.properties {
             WeaponProperties::Melee(props) => {
                 commands.spawn((
@@ -156,6 +158,7 @@ impl WeaponItem {
                         timer: Timer::from_seconds(props.swing_time, TimerMode::Once),
                         damage: self.damage,
                         range: props.swing_width,
+                        owner,
                     },
                     RigidBody::KinematicPositionBased,
                     Collider::cuboid(props.swing_width / 2.0, props.swing_height / 2.0),
@@ -178,12 +181,14 @@ impl WeaponItem {
                         damage: self.damage,
                         speed: props.projectile_speed,
                         lifetime: Timer::from_seconds(props.max_range / props.projectile_speed, TimerMode::Once),
+                        owner,
                     },
                     RigidBody::Dynamic,
                     Collider::ball(props.projectile_size / 2.0),
                     Velocity::linear(Vec2::new(transform.local_x().x, transform.local_x().y) * props.projectile_speed),
                     Sensor,
                     ActiveEvents::COLLISION_EVENTS,
+                    GravityScale(0.0)
                 ));
             }
         }

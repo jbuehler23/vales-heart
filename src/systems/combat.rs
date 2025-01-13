@@ -1,4 +1,4 @@
-use crate::{components::{combat::*, player::Player, weapon::{Attack, MeleeProperties, ProjectileType, RangedProperties}}, utils::drops::drop_item};
+use crate::{components::{combat::*, player::Player, weapon::{Attack, MeleeProperties, Projectile, ProjectileType, RangedProperties}}, utils::drops::drop_item};
 use bevy::{
     color::palettes::css::{RED, WHITE},
     prelude::*,
@@ -6,7 +6,12 @@ use bevy::{
 use bevy_rapier2d::prelude::*;
 use crate::components::weapon::{WeaponItem, WeaponType, WeaponProperties, Weapon};
 
-use super::weapon::Projectile;
+
+// Define collision groups
+const PLAYER_GROUP: Group = Group::GROUP_1;
+const ENEMY_GROUP: Group = Group::GROUP_2;
+const ATTACK_GROUP: Group = Group::GROUP_3;
+
 
 pub fn spawn_test_enemy(mut commands: Commands) {
     info!("Spawning test enemy");
@@ -40,6 +45,7 @@ pub fn spawn_test_enemy(mut commands: Commands) {
             combine_rule: CoefficientCombineRule::Min,
         },
         ActiveEvents::COLLISION_EVENTS,
+        CollisionGroups::new(ENEMY_GROUP,ATTACK_GROUP),
     ));
 }
 
@@ -205,25 +211,94 @@ fn get_projectile_pair(
     }
 }
 
-pub fn handle_combat_collisions(
+pub fn handle_combat_collision(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
-    attacks: Query<(Entity, &Attack)>,
-    projectiles: Query<(Entity, &Projectile, Option<&ProjectileType>)>,
-    mut enemies: Query<(Entity, &Transform, &mut Health), With<Enemy>>,
+    projectile_query: Query<(Entity, &Projectile)>,
+    attack_query: Query<(Entity, &Attack)>,
+    mut enemy_query: Query<(Entity, &Transform, &mut Health)>,
 ) {
-    for collision_event in collision_events.read() {
-        if let CollisionEvent::Started(e1, e2, _) = collision_event {
-            // Handle melee attacks
-            if let Some((attack_entity, enemy_entity)) = get_attack_pair(*e1, *e2, &attacks, &enemies) {
-                handle_attack_hit(&mut commands, attack_entity, enemy_entity, &attacks, &mut enemies);
-            }
-            // Handle projectiles
-            else if let Some((proj_entity, enemy_entity)) = get_projectile_pair(*e1, *e2, &projectiles, &enemies) {
-                handle_projectile_hit(&mut commands, proj_entity, enemy_entity, &projectiles, &mut enemies);
+    for event in collision_events.read() {
+        if let CollisionEvent::Started(e1, e2, _) = event {
+            // Try both orders of entities for projectile hits
+            let projectile_hit = check_projectile_hit(&mut commands, e1, e2, &projectile_query, &mut enemy_query)
+                || check_projectile_hit(&mut commands, e2, e1, &projectile_query, &mut enemy_query);
+
+            // Try both orders of entities for melee hits
+            let melee_hit = check_melee_hit(&mut commands, e1, e2, &attack_query, &mut enemy_query)
+                || check_melee_hit(&mut commands, e2, e1, &attack_query, &mut enemy_query);
+
+            if projectile_hit || melee_hit {
+                info!("Hit registered!");
             }
         }
-        
+    }
+}
+
+fn check_projectile_hit(
+    commands: &mut Commands,
+    proj_entity: &Entity,
+    enemy_entity: &Entity,
+    projectile_query: &Query<(Entity, &Projectile)>,
+    enemy_query: &mut Query<(Entity, &Transform, &mut Health)>,
+) -> bool {
+    if let Ok((proj_entity, projectile)) = projectile_query.get(*proj_entity) {
+        if let Ok((enemy_entity, transform, mut health)) = enemy_query.get_mut(*enemy_entity) {
+            health.current -= projectile.damage;
+            info!("Projectile hit for {} damage", projectile.damage);
+            spawn_floating_text(commands, transform.translation, projectile.damage, Color::WHITE, enemy_entity);
+            commands.entity(proj_entity).despawn();
+            
+            if health.current <= 0.0 {
+                commands.entity(enemy_entity).despawn();
+            }
+            return true;
+        }
+    }
+    false
+}
+
+fn check_melee_hit(
+    commands: &mut Commands,
+    attack_entity: &Entity,
+    enemy_entity: &Entity,
+    attack_query: &Query<(Entity, &Attack)>,
+    enemy_query: &mut Query<(Entity, &Transform, &mut Health)>,
+) -> bool {
+    if let Ok((attack_entity, attack)) = attack_query.get(*attack_entity) {
+        if let Ok((enemy_entity, transform, mut health)) = enemy_query.get_mut(*enemy_entity) {
+            health.current -= attack.damage;
+            spawn_floating_text(commands, transform.translation, attack.damage, Color::WHITE, enemy_entity);
+            
+            if health.current <= 0.0 {
+                commands.entity(enemy_entity).despawn();
+            }
+            return true;
+        }
+    }
+    false
+}
+
+pub fn cleanup_attacks(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut attack_query: Query<(Entity, &mut Attack)>,
+    mut projectile_query: Query<(Entity, &mut Projectile)>,
+) {
+    // Cleanup melee attacks
+    for (entity, mut attack) in attack_query.iter_mut() {
+        attack.timer.tick(time.delta());
+        if attack.timer.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+
+    // Cleanup projectiles
+    for (entity, mut projectile) in projectile_query.iter_mut() {
+        projectile.lifetime.tick(time.delta());
+        if projectile.lifetime.finished() {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -279,80 +354,80 @@ fn apply_damage(
     }
 }
 
-pub fn handle_weapon_attack(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut weapon_query: Query<(&mut WeaponItem, &Transform)>,
-) {
-    for (mut weapon, transform) in weapon_query.iter_mut() {
-        if weapon.can_attack(time.elapsed_secs()) {
-            weapon.set_last_attack(time.elapsed_secs());
+// pub fn handle_weapon_attack(
+//     mut commands: Commands,
+//     time: Res<Time>,
+//     mut weapon_query: Query<(&mut WeaponItem, &Transform)>,
+// ) {
+//     for (mut weapon, transform) in weapon_query.iter_mut() {
+//         if weapon.can_attack(time.elapsed_secs()) {
+//             weapon.set_last_attack(time.elapsed_secs());
             
-            match &weapon.properties {
-                WeaponProperties::Melee(props) => {
-                    spawn_melee_attack(&mut commands, weapon.damage(), props, transform);
-                },
-                WeaponProperties::Ranged(props) => {
-                    spawn_projectile(&mut commands, weapon.damage(), props, transform);
-                }
-            }
-        }
-    }
-}
+//             match &weapon.properties {
+//                 WeaponProperties::Melee(props) => {
+//                     spawn_melee_attack(&mut commands, weapon.damage(), props, transform);
+//                 },
+//                 WeaponProperties::Ranged(props) => {
+//                     spawn_projectile(&mut commands, weapon.damage(), props, transform);
+//                 }
+//             }
+//         }
+//     }
+// }
 
-fn spawn_melee_attack(
-    commands: &mut Commands,
-    damage: f32,
-    props: &MeleeProperties,
-    transform: &Transform,
-) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgba(1.0, 1.0, 1.0, 0.5),
-                custom_size: Some(Vec2::new(props.swing_width, props.swing_height)),
-                ..default()
-            },
-            transform: *transform,
-            ..default()
-        },
-        Attack {
-            timer: Timer::from_seconds(props.swing_time, TimerMode::Once),
-            damage,
-            range: props.swing_width,
-        },
-        RigidBody::KinematiDynamicPositionBased,
-        Collider::cuboid(props.swing_width / 2.0, props.swing_height / 2.0),
-    ));
-}
+// fn spawn_melee_attack(
+//     commands: &mut Commands,
+//     damage: f32,
+//     props: &MeleeProperties,
+//     transform: &Transform,
+// ) {
+//     commands.spawn((
+//         SpriteBundle {
+//             sprite: Sprite {
+//                 color: Color::rgba(1.0, 1.0, 1.0, 0.5),
+//                 custom_size: Some(Vec2::new(props.swing_width, props.swing_height)),
+//                 ..default()
+//             },
+//             transform: *transform,
+//             ..default()
+//         },
+//         Attack {
+//             timer: Timer::from_seconds(props.swing_time, TimerMode::Once),
+//             damage,
+//             range: props.swing_width,
+//         },
+//         RigidBody::KinematicPositionBased,
+//         Collider::cuboid(props.swing_width / 2.0, props.swing_height / 2.0),
+//     ));
+// }
 
-fn spawn_projectile(
-    commands: &mut Commands,
-    damage: f32,
-    props: &RangedProperties,
-    transform: &Transform,
-) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.8, 0.8, 0.2),
-                custom_size: Some(Vec2::splat(props.projectile_size)),
-                ..default()
-            },
-            transform: *transform,
-            ..default()
-        },
-        Projectile {
-            damage,
-            speed: props.projectile_speed,
-            lifetime: Timer::from_seconds(props.max_range / props.projectile_speed, TimerMode::Once),
-        },
-        RigidBody::Dynamic,
-        Collider::ball(props.projectile_size / 2.0),
-        Velocity::linear(Vec2::new(transform.local_x().x, transform.local_x().y) * props.projectile_speed),
-        Sensor,
-    ));
-}
+// fn spawn_projectile(
+//     commands: &mut Commands,
+//     damage: f32,
+//     props: &RangedProperties,
+//     transform: &Transform,
+// ) {
+//     commands.spawn((
+//         SpriteBundle {
+//             sprite: Sprite {
+//                 color: Color::rgb(0.8, 0.8, 0.2),
+//                 custom_size: Some(Vec2::splat(props.projectile_size)),
+//                 ..default()
+//             },
+//             transform: *transform,
+//             ..default()
+//         },
+//         Projectile {
+//             damage,
+//             speed: props.projectile_speed,
+//             lifetime: Timer::from_seconds(props.max_range / props.projectile_speed, TimerMode::Once),
+//         },
+//         RigidBody::Dynamic,
+//         Collider::ball(props.projectile_size / 2.0),
+//         Velocity::linear(Vec2::new(transform.local_x().x, transform.local_x().y) * props.projectile_speed),
+//         Sensor,
+//     ));
+// }
 
 pub fn update_attacks(
     mut commands: Commands,

@@ -1,21 +1,8 @@
 use bevy::{color::palettes::css::{BROWN, ORANGE_RED, RED}, prelude::*};
 use bevy_rapier2d::prelude::*;
 use crate::{components::{
-    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Weapon, WeaponItem, WeaponType}
+    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Projectile, Weapon, WeaponItem, WeaponType}
 }, plugins::weapon::{DamageEvent, HitEffectEvent}};
-
-#[derive(Component)]
-pub struct Projectile {
-    pub damage: f32,
-    pub speed: f32,
-    pub lifetime: Timer,
-}
-
-#[derive(Component)]
-pub enum ProjectileType {
-    Arrow,
-    Fireball,
-}
 
 pub fn handle_weapon_input(
     mut commands: Commands,
@@ -56,6 +43,7 @@ pub fn handle_weapon_input(
             // Spawn the attack
             weapon.spawn_attack(
                 &mut commands,
+                player_entity,
                 &Transform {
                     translation: spawn_pos,
                     rotation: Quat::from_rotation_z(direction.y.atan2(direction.x)),
