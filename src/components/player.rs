@@ -7,18 +7,21 @@ use super::{armor::ArmorItem, consumable::EffectType, inventory::Equipment, weap
 #[derive(Component)]
 pub struct Player {
     pub speed: f32,
-    pub facing: Direction,
+    pub direction: Direction,
     pub character_stats: CharacterStats,
     pub equipment: Equipment,
+    pub is_moving: bool
 }
 
 impl Default for Player {
     fn default() -> Self {
         Self {
             speed: 200.0,  // Increased base speed
-            facing: Direction::Down,
+            direction: Direction::Up,
             character_stats: CharacterStats::default(),
             equipment: Equipment::default(),
+            is_moving: false
+
         }
     }
 }
@@ -92,4 +95,15 @@ pub enum Direction {
     Down,
     Left,
     Right,
+}
+
+impl Direction {
+    pub fn to_vec2(&self) -> Vec2 {
+        match self {
+            Direction::Up => Vec2::new(0.0, 1.0),
+            Direction::Down => Vec2::new(0.0, -1.0),
+            Direction::Left => Vec2::new(-1.0, 0.0),
+            Direction::Right => Vec2::new(1.0, 0.0),
+        }
+    }
 }

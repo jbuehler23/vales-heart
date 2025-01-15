@@ -1,4 +1,4 @@
-use crate::{resources::GameState, systems::{class::spawn_selected_player, combat::*, input::mouse_aim_system}};
+use crate::{resources::GameState, systems::{combat::*, input::mouse_aim_system}};
 use bevy::prelude::*;
 
 pub struct CombatPlugin;

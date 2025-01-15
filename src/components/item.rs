@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use std::collections::HashMap;
 
 use super::{armor::ArmorItem, consumable::ConsumableItem, weapon::WeaponItem};
 

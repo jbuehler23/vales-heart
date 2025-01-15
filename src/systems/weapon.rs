@@ -1,8 +1,7 @@
-use bevy::{color::palettes::css::{BROWN, ORANGE_RED, RED}, prelude::*};
-use bevy_rapier2d::prelude::*;
-use crate::{components::{
-    class::{ClassType, PlayerClass}, combat::{DamageNumber, Enemy, Health}, player::{Direction, MovementInput, Player}, weapon::{Projectile, Weapon, WeaponItem, WeaponType}
-}, plugins::weapon::{DamageEvent, HitEffectEvent}};
+use bevy::prelude::*;
+use crate::components::{
+    player::{Direction, MovementInput, Player}, weapon::{Projectile, Weapon, WeaponItem}
+};
 
 pub fn handle_weapon_input(
     mut commands: Commands,
@@ -59,7 +58,7 @@ pub fn update_player_direction(
 ) {
     for (mut player, movement) in player_query.iter_mut() {
         if movement.x != 0.0 || movement.y != 0.0 {
-            player.facing = if movement.x.abs() > movement.y.abs() {
+            player.direction = if movement.x.abs() > movement.y.abs() {
                 if movement.x > 0.0 { Direction::Right } else { Direction::Left }
             } else {
                 if movement.y > 0.0 { Direction::Up } else { Direction::Down }

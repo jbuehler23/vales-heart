@@ -8,4 +8,4 @@ pub mod weapon;
 pub mod ui;
 pub mod inventory;
 pub mod world;
-// pub mod animation;
+pub mod animation;

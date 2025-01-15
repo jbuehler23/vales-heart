@@ -28,7 +28,7 @@ pub fn remove_item_from_inventory(
 
 pub fn update_inventory_ui(
     query: Query<(&Inventory, &Children), Changed<Inventory>>,
-    mut ui_query: Query<&mut Text>,
+    ui_query: Query<&mut Text>,
 ) {
     for (inventory, children) in query.iter() {
         // Update UI representation of inventory
@@ -37,12 +37,10 @@ pub fn update_inventory_ui(
 }
 
 use crate::components::{
-    inventory::*,
     item::{Item, ItemType},
     player::Player,
     ui::InventoryUI,
 };
-use bevy::prelude::*;
 
 // Handle picking up items in the world
 pub fn handle_item_pickup(
@@ -73,7 +71,7 @@ pub fn handle_item_pickup(
 
 // Handle using/equipping items
 pub fn handle_item_use(
-    mut commands: Commands,
+    commands: Commands,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut player_query: Query<(&mut Inventory, &mut Player)>,
 ) {

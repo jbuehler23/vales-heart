@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 // src/components/combat.rs
 #[derive(Component, Debug)]

@@ -1,10 +1,7 @@
-use crate::{components::{combat::*, player::Player, weapon::{Attack, MeleeProperties, Projectile, ProjectileType, RangedProperties}}, utils::drops::drop_item};
-use bevy::{
-    color::palettes::css::{RED, WHITE},
-    prelude::*,
-};
+use crate::components::{combat::*, player::Player, weapon::{Attack, Projectile, ProjectileType}};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use crate::components::weapon::{WeaponItem, WeaponType, WeaponProperties, Weapon};
+use crate::components::weapon::Weapon;
 
 
 // Define collision groups

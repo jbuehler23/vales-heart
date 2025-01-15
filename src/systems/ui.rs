@@ -1,10 +1,10 @@
 use crate::{
     components::{
-        class::{ClassType, SelectedClass}, combat::Enemy, inventory::Inventory, item::{Item, ItemRarity}, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::WeaponItem
+        class::{ClassType, SelectedClass}, combat::Enemy, player::Player, ui::{ButtonType, InventoryUI, ItemSlot, MenuButton, MenuData}, weapon::WeaponItem
     },
     resources::GameState,
 };
-use bevy::{prelude::*, text::cosmic_text::ttf_parser::RgbaColor};
+use bevy::prelude::*;
 
 pub fn class_selection_ui(mut commands: Commands, mut menu_data: ResMut<MenuData>) {
     // Root node

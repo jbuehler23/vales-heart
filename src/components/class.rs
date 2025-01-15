@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use super::weapon::{WeaponItem, WeaponType, WeaponProperties, MeleeProperties, RangedProperties};
+use super::weapon::{create_bow, create_sword, create_wand, WeaponItem, WeaponProperties, WeaponType};
 
 #[derive(Component, Debug, Clone)]
 pub struct PlayerClass {
@@ -33,18 +33,7 @@ impl PlayerClass {
                         damage_multiplier: 1.2,
                     },
                 },
-                WeaponItem {
-                    weapon_type: WeaponType::Melee,
-                    damage: 15.0,
-                    attack_speed: 1.0,
-                    last_attack: 0.0,
-                    properties: WeaponProperties::Melee(MeleeProperties {
-                        swing_width: 48.0,
-                        swing_height: 24.0,
-                        swing_time: 0.3,
-                        swing_arc: std::f32::consts::PI * 0.75,
-                    }),
-                }
+                create_sword(),
             ),
             ClassType::Archer => (
                 Self {
@@ -55,17 +44,7 @@ impl PlayerClass {
                         damage_multiplier: 1.0,
                     },
                 },
-                WeaponItem {
-                    weapon_type: WeaponType::Ranged,
-                    damage: 10.0,
-                    attack_speed: 0.8,
-                    last_attack: 0.0,
-                    properties: WeaponProperties::Ranged(RangedProperties {
-                        projectile_speed: 400.0,
-                        projectile_size: 8.0,
-                        max_range: 500.0,
-                    }),
-                }
+                create_bow(),
             ),
             ClassType::Mage => (
                 Self {
@@ -76,41 +55,8 @@ impl PlayerClass {
                         damage_multiplier: 1.5,
                     },
                 },
-                WeaponItem {
-                    weapon_type: WeaponType::Ranged,
-                    damage: 8.0,
-                    attack_speed: 1.2,
-                    last_attack: 0.0,
-                    properties: WeaponProperties::Ranged(RangedProperties {
-                        projectile_speed: 300.0,
-                        projectile_size: 12.0,
-                        max_range: 400.0,
-                    }),
-                }
+                create_wand(),
             ),
-        }
-    }
-
-    pub fn modify_weapon(&self, weapon: &mut WeaponItem) {
-        match (self.class_type, &weapon.properties) {
-            (ClassType::Warrior, WeaponProperties::Melee(_)) => {
-                weapon.damage *= self.base_stats.damage_multiplier;
-                weapon.attack_speed *= 1.2;
-            },
-            (ClassType::Archer, WeaponProperties::Ranged(props)) => {
-                weapon.damage *= self.base_stats.damage_multiplier;
-                if let WeaponProperties::Ranged(ref mut ranged) = weapon.properties {
-                    ranged.projectile_speed *= 1.3;
-                    ranged.max_range *= 1.2;
-                }
-            },
-            (ClassType::Mage, WeaponProperties::Ranged(_)) => {
-                weapon.damage *= self.base_stats.damage_multiplier;
-                if let WeaponProperties::Ranged(ref mut ranged) = weapon.properties {
-                    ranged.projectile_size *= 1.5;
-                }
-            },
-            _ => {} // No special modifiers for mismatched class/weapon combinations
         }
     }
 }

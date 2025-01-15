@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::Velocity;
 
 use crate::components::player::{MovementInput, Player};
 

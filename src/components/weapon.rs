@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -121,6 +120,20 @@ pub fn create_bow() -> WeaponItem {
             projectile_speed: 300.0,
             projectile_size: 8.0,
             max_range: 400.0,
+        }),
+    }
+}
+
+pub fn create_wand() -> WeaponItem {
+    WeaponItem {
+        weapon_type: WeaponType::Ranged,
+        damage: 12.0,
+        attack_speed: 0.6,
+        last_attack: 0.0,
+        properties: WeaponProperties::Ranged(RangedProperties {
+            projectile_speed: 200.0,
+            projectile_size: 15.0,
+            max_range: 300.0,
         }),
     }
 }

@@ -6,3 +6,4 @@ pub mod class;
 pub mod menu;
 pub mod inventory;
 pub mod world;
+pub mod assets;

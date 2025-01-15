@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 // Debug components to control visualization features
 #[derive(Component)]
