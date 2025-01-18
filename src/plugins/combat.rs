@@ -8,7 +8,7 @@ impl Plugin for CombatPlugin {
         app
             .add_systems(OnEnter(GameState::Playing), spawn_test_enemy)
             .add_systems(Update, (
-                mouse_aim_system,
+                // mouse_aim_system,
                 handle_combat_collision,
                 cleanup_attacks,
                 update_floating_text,

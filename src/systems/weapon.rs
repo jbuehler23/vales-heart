@@ -7,33 +7,29 @@ pub fn handle_weapon_input(
     mut commands: Commands,
     time: Res<Time>,
     keyboard: Res<ButtonInput<KeyCode>>,
-    windows: Query<&Window>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    player_query: Query<(Entity, &Transform), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &Player), With<Player>>,
     mut weapon_query: Query<&mut WeaponItem>,
 ) {
     // Only process if space is pressed
-    if !keyboard.pressed(KeyCode::Space) {
+    if !keyboard.just_pressed(KeyCode::Space) {
         return;
     }
 
-    let (camera, camera_transform) = camera_query.single();
-    let window = windows.single();
-
-    // Get mouse position in world coordinates
-    if let (Some(cursor_pos), Ok((player_entity, player_transform))) = (
-        window.cursor_position().and_then(|cursor| {
-            camera.viewport_to_world_2d(camera_transform, cursor).ok()
-        }),
-        player_query.get_single()
-    ) {
+    if let Ok((player_entity, player_transform, player)) = player_query.get_single() {
         if let Ok(mut weapon) = weapon_query.get_single_mut() {
             if !weapon.can_attack(time.elapsed_secs()) {
                 return;
             }
 
-            // Calculate attack direction and position
-            let direction = (cursor_pos - player_transform.translation.truncate()).normalize();
+            // Get attack direction based on player's current facing direction
+            let direction = match player.direction {
+                Direction::Up => Vec2::new(0.0, 1.0),
+                Direction::Down => Vec2::new(0.0, -1.0),
+                Direction::Left => Vec2::new(-1.0, 0.0),
+                Direction::Right => Vec2::new(1.0, 0.0),
+            };
+
+            // Calculate spawn position in front of player
             let spawn_pos = player_transform.translation + Vec3::new(direction.x * 32.0, direction.y * 32.0, 0.0);
 
             // Update weapon state
@@ -58,10 +54,19 @@ pub fn update_player_direction(
 ) {
     for (mut player, movement) in player_query.iter_mut() {
         if movement.x != 0.0 || movement.y != 0.0 {
-            player.direction = if movement.x.abs() > movement.y.abs() {
-                if movement.x > 0.0 { Direction::Right } else { Direction::Left }
+            // Set direction based on WASD movement
+            player.direction = if movement.y.abs() > movement.x.abs() {
+                if movement.y > 0.0 {
+                    Direction::Up
+                } else {
+                    Direction::Down
+                }
             } else {
-                if movement.y > 0.0 { Direction::Up } else { Direction::Down }
+                if movement.x > 0.0 {
+                    Direction::Right
+                } else {
+                    Direction::Left
+                }
             };
         }
     }
